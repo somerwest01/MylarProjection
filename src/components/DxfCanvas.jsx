@@ -18,57 +18,85 @@ function DxfCanvas({ entities }) {
   useEffect(() => {
     if (!entities || entities.length === 0) return;
 
-    // 1. Calcular límites del dibujo (Bounding Box)
     let minX = Infinity, minY = Infinity;
     let maxX = -Infinity, maxY = -Infinity;
+    
+    // 🆕 Limite seguro para las coordenadas
+    const SAFE_LIMIT = 1e9; // 1 billón (1,000,000,000)
 
     entities.forEach(entity => {
-      // ⚠️ Solo calculamos límites para las entidades que tienen puntos
+      // Función de validación para asegurar que el valor es un número finito y dentro del límite seguro
+      const isValidCoord = (c) => typeof c === 'number' && isFinite(c) && Math.abs(c) < SAFE_LIMIT;
+
+      // Cálculo del Bounding Box
       if (entity.type === 'LINE' && entity.start && entity.end) {
-        minX = Math.min(minX, entity.start.x, entity.end.x);
-        minY = Math.min(minY, entity.start.y, entity.end.y);
-        maxX = Math.max(maxX, entity.start.x, entity.end.x);
-        maxY = Math.max(maxY, entity.start.y, entity.end.y);
+        if (isValidCoord(entity.start.x) && isValidCoord(entity.end.x)) {
+          minX = Math.min(minX, entity.start.x, entity.end.x);
+          maxX = Math.max(maxX, entity.start.x, entity.end.x);
+        }
+        if (isValidCoord(entity.start.y) && isValidCoord(entity.end.y)) {
+          minY = Math.min(minY, entity.start.y, entity.end.y);
+          maxY = Math.max(maxY, entity.start.y, entity.end.y);
+        }
       } else if (entity.type === 'CIRCLE' && entity.center && entity.radius > 0) {
-        minX = Math.min(minX, entity.center.x - entity.radius);
-        minY = Math.min(minY, entity.center.y - entity.radius);
-        maxX = Math.max(maxX, entity.center.x + entity.radius);
-        maxY = Math.max(maxY, entity.center.y + entity.radius);
+        if (isValidCoord(entity.center.x) && isValidCoord(entity.radius)) {
+          minX = Math.min(minX, entity.center.x - entity.radius);
+          maxX = Math.max(maxX, entity.center.x + entity.radius);
+        }
+        if (isValidCoord(entity.center.y) && isValidCoord(entity.radius)) {
+          minY = Math.min(minY, entity.center.y - entity.radius);
+          maxY = Math.max(maxY, entity.center.y + entity.radius);
+        }
+      } else if (entity.type === 'POLYLINE_GEOM' && entity.points) {
+          // Iterar sobre los puntos de la polilínea
+          for(let i = 0; i < entity.points.length; i += 2) {
+              const x = entity.points[i];
+              const y = entity.points[i+1];
+              
+              if (isValidCoord(x)) {
+                  minX = Math.min(minX, x);
+                  maxX = Math.max(maxX, x);
+              }
+              if (isValidCoord(y)) {
+                  minY = Math.min(minY, y);
+                  maxY = Math.max(maxY, y);
+              }
+          }
       }
     });
 
     const drawingWidth = maxX - minX;
     const drawingHeight = maxY - minY;
 
-    // 2. Cálculo de la escala y centrado (con protección contra división por cero)
+    console.log(`DXF Limits: MinX=${minX.toFixed(2)}, MaxX=${maxX.toFixed(2)} | Width=${drawingWidth.toFixed(2)}`);
+    console.log(`DXF Limits: MinY=${minY.toFixed(2)}, MaxY=${maxY.toFixed(2)} | Height=${drawingHeight.toFixed(2)}`);
+
     let newScale = INITIAL_SCALE;
     let offsetX = 0;
     let offsetY = 0;
     
     // Solo escalamos si el dibujo tiene un tamaño perceptible
-    if (minX !== Infinity && maxX !== -Infinity && drawingWidth > 0 && drawingHeight > 0) {
+ if (minX !== Infinity && maxX !== -Infinity && drawingWidth > 0 && drawingHeight > 0) {
+
       const padding = 50;
       const scaleX = (CANVAS_WIDTH - padding) / drawingWidth;
       const scaleY = (CANVAS_HEIGHT - padding) / drawingHeight;
       newScale = Math.min(scaleX, scaleY);
       
       // Asegurar que la escala no sea 0 o Infinity
-      if (!isFinite(newScale) || newScale === 0) {
-          newScale = INITIAL_SCALE; // Revertir a escala inicial si falla
+      if (!isFinite(newScale) || newScale <= 0 || newScale > 1000) { 
+          newScale = INITIAL_SCALE;
       }
 
-      // Calcular el nuevo centro del dibujo
       const centerX = minX + drawingWidth / 2;
       const centerY = minY + drawingHeight / 2;
 
-      // Calcular el offset para centrar el dibujo escalado
       offsetX = (CANVAS_WIDTH / 2) - (centerX * newScale);
       offsetY = (CANVAS_HEIGHT / 2) - (centerY * newScale);
     }
 
     setScale(newScale);
     setOffset({ x: offsetX, y: offsetY });
-    setDebugInfo(`Scale: ${newScale.toFixed(2)}, Offset: (${offsetX.toFixed(0)}, ${offsetY.toFixed(0)})`);
 
   }, [entities]);  // Se ejecuta cada vez que las entidades cambian
 
