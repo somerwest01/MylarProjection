@@ -18,19 +18,27 @@ export function parseDxfFile(dxfText) {
 export function extractDxfEntities(drawing) {
     const entities = drawing.entities || [];
     const validEntities = [];
+
+    const isNumber = (n) => typeof n === 'number' && isFinite(n);
     
     entities.forEach(e => {
         const color = e.colorIndex || 'black';
         
         switch(e.type) {
             case 'LINE':
-                if (e.start && e.end) {
+                // ⚠️ VERIFICACIÓN CRÍTICA: Aseguramos que todas las coordenadas existan y sean números
+                if (e.start && e.end && 
+                    isNumber(e.start.x) && isNumber(e.start.y) && 
+                    isNumber(e.end.x) && isNumber(e.end.y)) 
+                {
                     validEntities.push({
                         type: 'LINE',
                         start: { x: e.start.x, y: e.start.y },
                         end: { x: e.end.x, y: e.end.y },
                         color: color
                     });
+                } else {
+                    console.warn("Línea omitida: Coordenada faltante o no numérica.");
                 }
                 break;
 
@@ -74,3 +82,4 @@ export function extractDxfEntities(drawing) {
     
     return validEntities;
 }
+
