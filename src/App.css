@@ -1,0 +1,84 @@
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css');
+
+:root {
+  /* Variables de diseño */
+  --sidebar-width: 80px;
+  --menu-panel-width: 350px;
+  --panel-bg: #ffffff;
+  --app-bg: #f0f0f0;
+  --sidebar-bg: #ffffff;
+  --accent-color: #3b82f6; /* Azul moderno */
+}
+
+/* Estilos de la aplicación principal */
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  background-color: var(--app-bg);
+  overflow: hidden; /* Evita el scroll global */
+}
+
+.main-layout {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+}
+
+/* Estilos para el Sidebar */
+.sidebar-container {
+  width: var(--sidebar-width);
+  background-color: var(--sidebar-bg);
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  padding-top: 20px;
+  flex-shrink: 0; /* Asegura que no se encoja */
+  z-index: 10;
+}
+
+/* Estilos para el botón del Sidebar */
+.sidebar-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 75px;
+  color: #333;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+  padding: 5px 0;
+  font-size: 12px;
+  font-weight: 500;
+  user-select: none;
+}
+
+.sidebar-button:hover,
+.sidebar-button.active {
+  background-color: #e6f0ff; /* Fondo más claro al pasar el ratón/activo */
+  color: var(--accent-color);
+}
+
+.sidebar-button i {
+  font-size: 20px;
+  margin-bottom: 5px;
+}
+
+/* Estilos para el panel de menú desplegable */
+.menu-panel-container {
+  width: 0; /* Inicialmente cerrado */
+  height: 100%;
+  background-color: var(--panel-bg);
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: width 0.3s ease-out; /* Animación de despliegue */
+  flex-shrink: 0;
+  z-index: 9;
+}
+
+.menu-panel-container.open {
+  width: var(--menu-panel-width);
+}
+
+.menu-content {
+  padding: 20px;
+}
