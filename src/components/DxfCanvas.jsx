@@ -122,9 +122,10 @@ function DxfCanvas({ entities }) {
 
   // Función para renderizar una entidad
   const renderEntity = (entity, index) => {
+    if (!entity || !entity.type) return null;
     
-    // Determina el color (si viene del DXF, si no, usa negro)
     const strokeColor = entity.color || 'black';
+    const strokeWidth = 1 / scale;
 
     switch (entity.type) {
       case 'LINE':
@@ -134,7 +135,7 @@ function DxfCanvas({ entities }) {
             key={index}
             points={[entity.start.x, entity.start.y, entity.end.x, entity.end.y]}
             stroke={strokeColor}
-            strokeWidth={1 / scale}
+            strokeWidth={strokeWidth}
           />
         );
       case 'CIRCLE':
@@ -146,7 +147,18 @@ function DxfCanvas({ entities }) {
             y={entity.center.y}
             radius={entity.radius}
             stroke={strokeColor}
-            strokeWidth={1 / scale}
+            strokeWidth={strokeWidth}
+          />
+        );
+      case 'POLYLINE_GEOM': // ⬅️ NUEVO CASO para Polilíneas
+        if (!entity.points || entity.points.length < 4) return null;
+        return (
+          <Line
+            key={index}
+            points={entity.points} // Array plano [x1, y1, x2, y2, ...]
+            stroke={strokeColor}
+            strokeWidth={strokeWidth}
+            closed={entity.isClosed} // Cierra la figura si es una forma (e.g., rectángulo)
           />
         );
       default:
