@@ -66,14 +66,27 @@ function App() {
       />
 
       {/* 3. Área de Trabajo Principal (Canvas / Diseño) */}
-      <div className="work-area">
+ <div className="work-area">
         <div className="canvas-container">
           {loading ? (
             <p>Cargando y analizando dibujo...</p>
           ) : dxfEntities && dxfEntities.length > 0 ? (
-            <DxfCanvas entities={dxfEntities} /> 
+            <>
+              {/* Muestra cuántas entidades se encontraron */}
+              <p style={{ position: 'absolute', top: 10, left: 10, color: '#333', zIndex: 1, backgroundColor: 'white', padding: '5px' }}>
+                  Entidades encontradas: {dxfEntities.length}
+              </p>
+              
+              {/* ⬅️ Pasamos las entidades al componente de dibujo */}
+              <DxfCanvas entities={dxfEntities} /> 
+            </>
           ) : (
-            <p>Lienzo de Diseño (Importa un DXF para empezar)</p>
+            <p>
+              Lienzo de Diseño (Importa un DXF para empezar) 
+              {dxfEntities && dxfEntities.length === 0 && (
+                <span style={{ color: 'red' }}><br/>¡Advertencia! No se encontraron entidades válidas (LINE, CIRCLE) en el archivo.</span>
+              )}
+            </p>
           )}
         </div>
       </div>
@@ -82,6 +95,7 @@ function App() {
 }
 
 export default App;
+
 
 
 
