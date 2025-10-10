@@ -241,6 +241,11 @@ function DxfCanvas({ entities }) {
         scaleX={scale}
         scaleY={scale}
       >
+        <Line 
+            points={[0, 0, 100, 100]} // Dibuja una línea de (0,0) a (100,100)
+            stroke="red"
+            strokeWidth={1 / scale}
+        />
         {entities.map((entity, index) => renderEntity(entity, index))}
       </Layer>
        {/* Información de depuración superpuesta */}
