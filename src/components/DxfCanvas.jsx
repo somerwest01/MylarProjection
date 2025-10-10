@@ -157,8 +157,6 @@ function DxfCanvas({ entities }) {
     const strokeColor = entity.color || 'black';
     const strokeWidth = 1 / scale;
 
-    const isSafeNumber = (c) => typeof c === 'number' && isFinite(c);
-
     switch (entity.type) {
       case 'LINE':
         if (!entity.start || !entity.end) return null;
@@ -168,6 +166,15 @@ function DxfCanvas({ entities }) {
             entity.end.x, 
             entity.end.y
         ];
+        return (
+          <Line
+            key={index}
+            points={linePoints}
+            stroke={strokeColor}
+            strokeWidth={strokeWidth}
+          />
+        );
+        
         const allLineCoordsValid = linePoints.every(isSafeNumber);
             if (!allLineCoordsValid) {
             console.error(`Línea ${index} omitida por coordenadas NaN/Infinity:`, linePoints);
