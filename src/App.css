@@ -8,6 +8,7 @@
   --app-bg: #f0f0f0;
   --sidebar-bg: #ffffff;
   --accent-color: #3b82f6; /* Azul moderno */
+  --canvas-bg: #ffffff; /* Fondo del lienzo (la "hoja") */
 }
 
 /* Estilos de la aplicación principal */
@@ -82,3 +83,30 @@ body {
 .menu-content {
   padding: 20px;
 }
+
+.work-area {
+  flex-grow: 1; /* Ocupa todo el espacio restante */
+  background-color: var(--app-bg); /* Fondo gris detrás del lienzo */
+  display: flex;
+  justify-content: center; /* Centrar el lienzo horizontalmente */
+  align-items: center; /* Centrar el lienzo verticalmente */
+  overflow: auto; /* Permite el scroll si el lienzo es más grande */
+}
+
+.canvas-container {
+  /* La hoja blanca flotante */
+  width: 1000px; /* Tamaño de ejemplo, puedes ajustarlo */
+  height: 600px; /* Tamaño de ejemplo, puedes ajustarlo */
+  background-color: var(--canvas-bg);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); /* Sombra para darle efecto de elevación */
+  border-radius: 4px; /* Ligeros bordes redondeados */
+  flex-shrink: 0; /* Evita que se encoja si hay poco espacio */
+  margin: 50px; /* Margen para asegurar que el fondo gris se vea */
+  /* Aquí irá el canvas de Konva, o cualquier contenido inicial */
+  display: flex; 
+  justify-content: center;
+  align-items: center;
+  color: #888;
+  font-size: 1.5em;
+}
+
