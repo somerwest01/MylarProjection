@@ -167,8 +167,8 @@ function DxfCanvas({ entities }) {
             entity.end.y
         ];
         const allLineCoordsValid = linePoints.every(isSafeNumber);
-            if (!allLineCoordsValid) {
-            console.error(`Línea ${index} omitida por coordenadas NaN/Infinity:`, linePoints);
+        if (!allLineCoordsValid) {
+            console.error(`Línea ${index} omitida por coordenadas inseguras:`, linePoints);
             return null;
         }  
         return (
