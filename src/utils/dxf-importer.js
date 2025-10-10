@@ -12,29 +12,64 @@ export function parseDxfFile(dxfText) {
   }
 }
 
+/**
+ * Filtra y prepara las entidades relevantes (LINE, CIRCLE, LWPOLYLINE).
+ */
 export function extractDxfEntities(drawing) {
     const entities = drawing.entities || [];
     const validEntities = [];
     
     entities.forEach(e => {
-        // Solo incluimos entidades que tienen la estructura de coordenadas básica
-        if (e.type === 'LINE' && e.start && e.end) {
-            validEntities.push({
-                type: 'LINE',
-                start: { x: e.start.x, y: e.start.y },
-                end: { x: e.end.x, y: e.end.y },
-                color: e.colorIndex || 'black'
-            });
-        } else if (e.type === 'CIRCLE' && e.center && e.radius > 0) {
-             validEntities.push({
-                type: 'CIRCLE',
-                center: { x: e.center.x, y: e.center.y },
-                radius: e.radius,
-                color: e.colorIndex || 'black'
-            });
+        const color = e.colorIndex || 'black';
+        
+        switch(e.type) {
+            case 'LINE':
+                if (e.start && e.end) {
+                    validEntities.push({
+                        type: 'LINE',
+                        start: { x: e.start.x, y: e.start.y },
+                        end: { x: e.end.x, y: e.end.y },
+                        color: color
+                    });
+                }
+                break;
+
+            case 'CIRCLE':
+                if (e.center && e.radius > 0) {
+                    validEntities.push({
+                        type: 'CIRCLE',
+                        center: { x: e.center.x, y: e.center.y },
+                        radius: e.radius,
+                        color: color
+                    });
+                }
+                break;
+            
+            case 'LWPOLYLINE':
+            case 'POLYLINE':
+                // Las polilíneas son arrays de vértices (puntos).
+                // Konva espera un array plano de coordenadas [x1, y1, x2, y2, ...]
+                if (e.vertices && e.vertices.length > 0) {
+                    const points = e.vertices
+                        .map(v => [v.x, v.y])
+                        .flat(); // Aplanar a un solo array de [x1, y1, x2, y2, ...]
+
+                    if (points.length >= 4) { // Necesita al menos dos puntos (4 coordenadas)
+                        validEntities.push({
+                            type: 'POLYLINE_GEOM', // Usamos un nuevo tipo para el renderizador
+                            points: points,
+                            color: color,
+                            isClosed: e.shape || false // Para saber si es una figura cerrada
+                        });
+                    }
+                }
+                break;
+
+            // IGNORAR MTEXT y otras entidades por ahora, para mantener la robustez.
+            default:
+                // console.log(`Entidad no soportada ignorada: ${e.type}`);
+                break;
         }
-        // Nota: Las polilíneas (POLYLINE/LWPOLYLINE) son más complejas, las omitimos por ahora
-        // hasta que el flujo básico funcione, para evitar errores.
     });
     
     return validEntities;
