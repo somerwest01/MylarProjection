@@ -30,13 +30,22 @@ export function extractDxfEntities(drawing) {
                 {
                     validEntities.push({
                         type: 'LINE',
-                        // Pasamos las coordenadas tal cual las devuelve el parser
-                        start: { x: e.start.x, y: e.start.y }, 
-                        end: { x: e.end.x, y: e.end.y },
+                        // ⚠️ BLINDAJE CRÍTICO: Usamos Number() y el operador OR (|| 0)
+                        // Esto garantiza que si el valor es null, undefined, o string vacío, sea 0.
+                        start: { 
+                            x: Number(e.start.x || 0), 
+                            y: Number(e.start.y || 0) 
+                        }, 
+                        end: { 
+                            x: Number(e.end.x || 0), 
+                            y: Number(e.end.y || 0) 
+                        },
                         color: color
                     });
+                    // Agregamos un log para confirmar que la línea ha sido agregada a la lista
+                    console.log(`LINE agregada al array de entidades.`);
                 } else {
-                    console.warn("Línea omitida en la importación: Objeto start/end faltante.");
+                    console.warn("Línea omitida en la importacion: Objeto start/end faltante.");
                 }
                 break;
 
@@ -80,5 +89,6 @@ export function extractDxfEntities(drawing) {
     
     return validEntities;
 }
+
 
 
