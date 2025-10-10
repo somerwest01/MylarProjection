@@ -5,6 +5,8 @@ const CANVAS_WIDTH = 1000;
 const CANVAS_HEIGHT = 600;
 const INITIAL_SCALE = 1;
 
+const isSafeNumber = (c) => typeof c === 'number' && isFinite(c);
+
 function DxfCanvas({ entities }) {
   const stageRef = useRef(null);
   const [scale, setScale] = useState(INITIAL_SCALE);
@@ -25,8 +27,6 @@ function DxfCanvas({ entities }) {
     const isValidCoord = (c) => typeof c === 'number' && isFinite(c) && Math.abs(c) < SAFE_LIMIT;
 
     entities.forEach(entity => {
-      // Función de validación para asegurar que el valor es un número finito y dentro del límite seguro
-      const isValidCoord = (c) => typeof c === 'number' && isFinite(c) && Math.abs(c) < SAFE_LIMIT;
 
       // Cálculo del Bounding Box
       if (entity.type === 'LINE' && entity.start && entity.end) {
@@ -166,6 +166,11 @@ function DxfCanvas({ entities }) {
             entity.end.x, 
             entity.end.y
         ];
+        const allLineCoordsValid = linePoints.every(isSafeNumber);
+            if (!allLineCoordsValid) {
+            console.error(`Línea ${index} omitida por coordenadas NaN/Infinity:`, linePoints);
+            return null;
+        }  
         return (
           <Line
             key={index}
@@ -173,14 +178,7 @@ function DxfCanvas({ entities }) {
             stroke={strokeColor}
             strokeWidth={strokeWidth}
           />
-        );
-        
-        const allLineCoordsValid = linePoints.every(isSafeNumber);
-            if (!allLineCoordsValid) {
-            console.error(`Línea ${index} omitida por coordenadas NaN/Infinity:`, linePoints);
-            return null;
-        }
-        
+        );      
         return (
           <Line
             key={index}
