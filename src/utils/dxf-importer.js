@@ -30,8 +30,6 @@ export function extractDxfEntities(drawing) {
                 {
                     validEntities.push({
                         type: 'LINE',
-                        // ⚠️ BLINDAJE CRÍTICO: Usamos Number() y el operador OR (|| 0)
-                        // Esto garantiza que si el valor es null, undefined, o string vacío, sea 0.
                         start: { 
                             x: Number(e.start.x || 0), 
                             y: Number(e.start.y || 0) 
@@ -42,9 +40,9 @@ export function extractDxfEntities(drawing) {
                         },
                         color: color
                     });
-                    // Agregamos un log para confirmar que la línea ha sido agregada a la lista
                     console.log(`LINE agregada al array de entidades.`);
                 } else {
+                    console.error("LÍNEA FALLIDA. Objeto devuelto por el parser:", e);
                     console.warn("Línea omitida en la importacion: Objeto start/end faltante.");
                 }
                 break;
@@ -89,6 +87,7 @@ export function extractDxfEntities(drawing) {
     
     return validEntities;
 }
+
 
 
 
