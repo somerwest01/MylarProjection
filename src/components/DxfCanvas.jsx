@@ -157,9 +157,23 @@ function DxfCanvas({ entities }) {
     const strokeColor = entity.color || 'black';
     const strokeWidth = 1 / scale;
 
+    const isSafeNumber = (c) => typeof c === 'number' && isFinite(c);
+
     switch (entity.type) {
       case 'LINE':
-        if (!entity.start || !entity.end || isNaN(entity.start.x) || isNaN(entity.end.x)) return null;
+        if (!entity.start || !entity.end) return null;
+        const linePoints = [
+            entity.start.x, 
+            entity.start.y, 
+            entity.end.x, 
+            entity.end.y
+        ];
+        const allLineCoordsValid = linePoints.every(isSafeNumber);
+            if (!allLineCoordsValid) {
+            console.error(`Línea ${index} omitida por coordenadas NaN/Infinity:`, linePoints);
+            return null;
+        }
+        
         return (
           <Line
             key={index}
@@ -182,6 +196,13 @@ function DxfCanvas({ entities }) {
         );
       case 'POLYLINE_GEOM': // ⬅️ NUEVO CASO para Polilíneas
         if (!entity.points || entity.points.length < 4) return null;
+        const validPoints = entity.points.filter(isSafeNumber);
+
+        if (validPoints.length / entity.points.length < 0.9) { 
+             console.error(`Polilínea ${index} omitida, demasiados puntos inválidos.`);
+             return null;
+        }
+        
         return (
           <Line
             key={index}
