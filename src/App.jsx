@@ -1,46 +1,40 @@
 import React, { useState } from 'react';
 import Sidebar from './components/Sidebar';
 import MenuPanel from './components/MenuPanel';
-import './App.css'; // Importa tus estilos
+import DxfCanvas from './components/DxfCanvas'; 
+import { parseDxfFile, extractDxfEntities } from './utils/dxf-importer'; 
+import './App.css'; 
 
 function App() {
   const [activeMenu, setActiveMenu] = useState('design'); 
   const [isMenuOpen, setIsMenuOpen] = useState(true); 
-  // 🆕 Estado para guardar los datos del dibujo DXF
   const [dxfData, setDxfData] = useState(null); 
+  const [dxfEntities, setDxfEntities] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // 🆕 Función que maneja el archivo DXF
+
   const handleDxfFileSelect = (file) => {
     setLoading(true);
-    // Usamos FileReader para leer el contenido del archivo
     const reader = new FileReader();
     
     reader.onload = async (e) => {
       const fileContent = e.target.result;
       
-      // ⚠️ ADVERTENCIA: Aquí es donde se usaría la librería DXF.
-      // Como no la hemos instalado ni configurado, solo simularemos el proceso.
-      
       try {
-        // ➡️ PASO REAL (REQUIERE LIBRERÍA INSTALADA)
-        // const parser = new DxfParser();
-        // const drawing = parser.parseSync(fileContent);
-        // setDxfData(drawing);
+      const drawing = parseDxfFile(fileContent);
+      const entities = extractDxfEntities(drawing);
 
-        // ➡️ PASO SIMULADO POR AHORA:
-        console.log(`Archivo ${file.name} cargado. Listo para ser analizado.`);
-        setDxfData({ message: `DXF cargado: ${file.name}. Listo para dibujar.` });
+      setDxfEntities(entities);
+      console.log(`Dibujo analizado con ${entities.length} entidades.`);
 
       } catch (error) {
-        console.error("Error al analizar el archivo DXF:", error);
-        alert("Hubo un error al procesar el archivo DXF.");
+        console.error("Error al procesar el archivo:", error.message);
+        alert(error.message);
       } finally {
         setLoading(false);
       }
     };
-    
-    // Lee el archivo como texto plano
+
     reader.readAsText(file);
   };
 
@@ -68,7 +62,7 @@ function App() {
       <MenuPanel 
         isOpen={isMenuOpen} // Siempre abierto en este ejemplo simple
         activeMenu={activeMenu} 
-        onDxfFileSelect={handleDxfFileSelect} // ⬅️ NUEVA PROP
+        onDxfFileSelect={handleDxfFileSelect}
       />
 
       {/* 3. Área de Trabajo Principal (Canvas / Diseño) */}
@@ -76,12 +70,8 @@ function App() {
         <div className="canvas-container">
           {loading ? (
             <p>Cargando y analizando dibujo...</p>
-          ) : dxfData ? (
-            <div>
-              <p style={{ color: 'green' }}>{dxfData.message}</p>
-              {/* Aquí se integraría el componente <Stage> de Konva para renderizar el dibujo */}
-              <p>El dibujo DXF se mostrará aquí.</p>
-            </div>
+          ) : dxfEntities && dxfEntities.length > 0 ? (
+            <DxfCanvas entities={dxfEntities} /> 
           ) : (
             <p>Lienzo de Diseño (Importa un DXF para empezar)</p>
           )}
@@ -92,5 +82,6 @@ function App() {
 }
 
 export default App;
+
 
 
