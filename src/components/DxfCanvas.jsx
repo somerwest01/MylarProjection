@@ -160,15 +160,16 @@ function DxfCanvas({ entities }) {
     switch (entity.type) {
       case 'LINE':
         if (!entity.start || !entity.end) return null;
-        const linePoints = [
-            entity.start.x, 
-            entity.start.y, 
-            entity.end.x, 
-            entity.end.y
-        ];
+        const linePoints = [
+            entity.start.x || 0,  // ⬅️ CAMBIO CRÍTICO
+            entity.start.y || 0,  // ⬅️ CAMBIO CRÍTICO
+            entity.end.x || 0,    // ⬅️ CAMBIO CRÍTICO
+            entity.end.y || 0     // ⬅️ CAMBIO CRÍTICO
+        ];
+        
         const allLineCoordsValid = linePoints.every(isSafeNumber);
         if (!allLineCoordsValid) {
-            console.error(`Línea ${index} omitida por coordenadas inseguras:`, linePoints);
+            console.error(`Línea ${index} omitida (Error de coordenadas no finitas):`, linePoints);
             return null;
         }  
         return (
