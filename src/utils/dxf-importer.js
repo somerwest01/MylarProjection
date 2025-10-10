@@ -26,19 +26,17 @@ export function extractDxfEntities(drawing) {
         
         switch(e.type) {
             case 'LINE':
-                // ⚠️ VERIFICACIÓN CRÍTICA: Aseguramos que todas las coordenadas existan y sean números
-                if (e.start && e.end && 
-                    isNumber(e.start.x) && isNumber(e.start.y) && 
-                    isNumber(e.end.x) && isNumber(e.end.y)) 
+                if (e.start && e.end) 
                 {
                     validEntities.push({
                         type: 'LINE',
-                        start: { x: e.start.x, y: e.start.y },
+                        // Pasamos las coordenadas tal cual las devuelve el parser
+                        start: { x: e.start.x, y: e.start.y }, 
                         end: { x: e.end.x, y: e.end.y },
                         color: color
                     });
                 } else {
-                    console.warn("Línea omitida: Coordenada faltante o no numérica.");
+                    console.warn("Línea omitida en la importación: Objeto start/end faltante.");
                 }
                 break;
 
@@ -82,4 +80,5 @@ export function extractDxfEntities(drawing) {
     
     return validEntities;
 }
+
 
