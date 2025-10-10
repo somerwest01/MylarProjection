@@ -9,7 +9,6 @@ function DxfCanvas({ entities }) {
   const stageRef = useRef(null);
   const [scale, setScale] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
-  const [initialView, setInitialView] = useState(false);
   
   // 🆕 EFECTO para centrar y escalar el dibujo al cargar
   useEffect(() => {
@@ -18,43 +17,62 @@ function DxfCanvas({ entities }) {
       let minX = Infinity, minY = Infinity;
       let maxX = -Infinity, maxY = -Infinity;
 
-      entities.forEach(entity => {
-        // Esto debe ajustarse según el tipo de entidad
-        if (entity.type === 'LINE') {
-          minX = Math.min(minX, entity.start.x, entity.end.x);
-          minY = Math.min(minY, entity.start.y, entity.end.y);
-          maxX = Math.max(maxX, entity.start.x, entity.end.x);
-          maxY = Math.max(maxY, entity.start.y, entity.end.y);
-        }
-        // ... Lógica para otros tipos (Polyline, Circle, etc.)
-      });
+    entities.forEach(entity => {
+  
+      if (entity.type === 'LINE' && entity.start && entity.end) {
+        minX = Math.min(minX, entity.start.x, entity.end.x);
+        minY = Math.min(minY, entity.start.y, entity.end.y);
+        maxX = Math.max(maxX, entity.start.x, entity.end.x);
+        maxY = Math.max(maxY, entity.start.y, entity.end.y);
+      } else if (entity.type === 'CIRCLE' && entity.center) {
+
+        minX = Math.min(minX, entity.center.x - entity.radius);
+        minY = Math.min(minY, entity.center.y - entity.radius);
+        maxX = Math.max(maxX, entity.center.x + entity.radius);
+        maxY = Math.max(maxY, entity.center.y + entity.radius);
+      }
+    });
 
       const drawingWidth = maxX - minX;
       const drawingHeight = maxY - minY;
 
       // 2. Calcular la escala y centrado
-      const padding = 50; // Un poco de margen
-      const scaleX = (CANVAS_WIDTH - padding) / drawingWidth;
-      const scaleY = (CANVAS_HEIGHT - padding) / drawingHeight;
-      const newScale = Math.min(scaleX, scaleY) || 1;
+    const padding = 50;
+    let newScale = 1;
+      
+    // Solo escalamos si el dibujo tiene un tamaño perceptible
+    if (drawingWidth > 0 && drawingHeight > 0) {
+        const scaleX = (CANVAS_WIDTH - padding) / drawingWidth;
+        const scaleY = (CANVAS_HEIGHT - padding) / drawingHeight;
+        newScale = Math.min(scaleX, scaleY);
+    }
+    
+    // 3. Aplicar el centrado (manejando posible Infinity/NaN si no se encontraron entidades)
+    if (minX !== Infinity && maxX !== -Infinity) {
+      const centerX = minX + drawingWidth / 2;
+      const centerY = minY + drawingHeight / 2;
 
-      // 3. Aplicar el centrado
-      const offsetX = (CANVAS_WIDTH / 2) - (drawingWidth / 2) * newScale - minX * newScale;
-      const offsetY = (CANVAS_HEIGHT / 2) - (drawingHeight / 2) * newScale - minY * newScale;
-
+      const offsetX = (CANVAS_WIDTH / 2) - (centerX * newScale);
+      const offsetY = (CANVAS_HEIGHT / 2) - (centerY * newScale);
+      
       setScale(newScale);
       setOffset({ x: offsetX, y: offsetY });
-      setInitialView(true);
     }
-  }, [entities, initialView]);
+    
+  }, [entities]); 
 
 
   // 🆕 Función para renderizar una entidad
   const renderEntity = (entity, index) => {
-    const strokeColor = entity.colorIndex ? entity.colorIndex : 'black';
+    if (!entity || !entity.type) return null;
+    
+    const strokeColor = entity.color || 'black';
 
-    switch (entity.type) {
+switch (entity.type) {
       case 'LINE':
+        // Protección extra para líneas
+        if (!entity.start || !entity.end) return null;
+        
         return (
           <Line
             key={index}
@@ -64,6 +82,9 @@ function DxfCanvas({ entities }) {
           />
         );
       case 'CIRCLE':
+        // Protección extra para círculos
+        if (!entity.center || !entity.radius) return null;
+        
         return (
           <Circle
             key={index}
@@ -74,7 +95,6 @@ function DxfCanvas({ entities }) {
             strokeWidth={1 / scale}
           />
         );
-      // ➡️ Aquí agregarías más casos (POLYLINE, ARC, TEXT, etc.)
       default:
         return null;
     }
@@ -88,10 +108,10 @@ function DxfCanvas({ entities }) {
       style={{ border: '1px solid #ddd' }}
     >
       <Layer
+        x={offset.x}
+        y={offset.y}
         scaleX={scale}
         scaleY={scale}
-        offsetX={-offset.x / scale} // Aplicar el offset en la posición del Layer
-        offsetY={-offset.y / scale} // Asegurarse que el punto (0,0) esté visible
       >
         {entities.map((entity, index) => renderEntity(entity, index))}
       </Layer>
