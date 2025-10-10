@@ -1,7 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Stage, Layer, Line, Circle } from 'react-konva';
 
-// Definimos un tamaño fijo para el canvas dentro de canvas-container
 const CANVAS_WIDTH = 1000;
 const CANVAS_HEIGHT = 600;
 
@@ -10,22 +9,23 @@ function DxfCanvas({ entities }) {
   const [scale, setScale] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   
-  // 🆕 EFECTO para centrar y escalar el dibujo al cargar
+  // EFECTO para centrar y escalar el dibujo al cargar
   useEffect(() => {
-    if (entities && entities.length > 0 && !initialView) {
-      // 1. Calcular límites del dibujo (Bounding Box)
-      let minX = Infinity, minY = Infinity;
-      let maxX = -Infinity, maxY = -Infinity;
+    if (!entities || entities.length === 0) return;
+
+    // 1. Calcular límites del dibujo (Bounding Box)
+    let minX = Infinity, minY = Infinity;
+    let maxX = -Infinity, maxY = -Infinity;
 
     entities.forEach(entity => {
-  
+      // ⚠️ Solo calculamos límites para las entidades que tienen puntos
       if (entity.type === 'LINE' && entity.start && entity.end) {
         minX = Math.min(minX, entity.start.x, entity.end.x);
         minY = Math.min(minY, entity.start.y, entity.end.y);
         maxX = Math.max(maxX, entity.start.x, entity.end.x);
         maxY = Math.max(maxY, entity.start.y, entity.end.y);
       } else if (entity.type === 'CIRCLE' && entity.center) {
-
+         // Lógica simplificada para círculos
         minX = Math.min(minX, entity.center.x - entity.radius);
         minY = Math.min(minY, entity.center.y - entity.radius);
         maxX = Math.max(maxX, entity.center.x + entity.radius);
@@ -33,13 +33,13 @@ function DxfCanvas({ entities }) {
       }
     });
 
-      const drawingWidth = maxX - minX;
-      const drawingHeight = maxY - minY;
+    const drawingWidth = maxX - minX;
+    const drawingHeight = maxY - minY;
 
-      // 2. Calcular la escala y centrado
+    // 2. Cálculo de la escala y centrado (con protección contra división por cero)
     const padding = 50;
     let newScale = 1;
-      
+    
     // Solo escalamos si el dibujo tiene un tamaño perceptible
     if (drawingWidth > 0 && drawingHeight > 0) {
         const scaleX = (CANVAS_WIDTH - padding) / drawingWidth;
@@ -59,16 +59,18 @@ function DxfCanvas({ entities }) {
       setOffset({ x: offsetX, y: offsetY });
     }
     
-  }, [entities]); 
+  }, [entities]); // Se ejecuta cada vez que las entidades cambian
 
 
-  // 🆕 Función para renderizar una entidad
+  // Función para renderizar una entidad
   const renderEntity = (entity, index) => {
+    // ⚠️ Protección contra valores indefinidos o inválidos antes de renderizar
     if (!entity || !entity.type) return null;
     
+    // Determina el color (si viene del DXF, si no, usa negro)
     const strokeColor = entity.color || 'black';
 
-switch (entity.type) {
+    switch (entity.type) {
       case 'LINE':
         // Protección extra para líneas
         if (!entity.start || !entity.end) return null;
@@ -105,9 +107,11 @@ switch (entity.type) {
       ref={stageRef}
       width={CANVAS_WIDTH}
       height={CANVAS_HEIGHT}
-      style={{ border: '1px solid #ddd' }}
+      // El estilo aquí es importante para que el Stage ocupe el espacio del canvas-container
+      style={{ border: '1px solid #ddd' }} 
     >
       <Layer
+        // ⚠️ Konva usa la propiedad position (x, y) en el Layer para el centrado/offset
         x={offset.x}
         y={offset.y}
         scaleX={scale}
