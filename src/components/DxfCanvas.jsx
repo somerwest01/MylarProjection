@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { Stage, Layer, Line, Circle } from 'react-konva';
+import { Stage, Layer, Line, Circle, Text } from 'react-konva';
 
 const CANVAS_WIDTH = 1000;
 const CANVAS_HEIGHT = 600;
