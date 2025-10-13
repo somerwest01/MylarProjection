@@ -164,6 +164,24 @@ function DxfCanvas({ entities }) {
     const strokeWidth = 1 / scale;
 
     switch (entity.type) {
+                case 'MTEXT':
+            // Renderiza el texto en la posición y rotación correctas.
+            return (
+                <Text
+                    key={index}
+                    text={entity.text}
+                    scaleY={-1}
+                    x={entity.x}
+                    y={entity.y + 10}
+                    rotation={entity.rotation}
+                    fontSize={20} // Ajusta el tamaño de fuente según sea necesario
+                    fill={entity.color} // Usar el color del DXF
+                    // El texto se dibuja desde la esquina superior izquierda por defecto.
+                    // Para evitar que el texto esté invertido por scaleY={-scale},
+                    // puedes aplicar un scaleY interno de -1 al Text si es necesario,
+                    // pero a menudo es más fácil ajustar la posición Y.
+                />
+            );
       case 'LINE':
         if (!entity.start || !entity.end) return null;
         const linePoints = [
