@@ -237,7 +237,7 @@ function DxfCanvas({ entities }) {
       <Layer
         // Konva usa x, y en el Layer para aplicar el offset y el pan.
         x={offset.x}
-        y={offset.y + CANVAS_HEIGHT}
+        y={offset.y}
         scaleX={scale}
         scaleY={-scale}
       >
