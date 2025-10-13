@@ -165,6 +165,7 @@ function DxfCanvas({ entities }) {
 
     switch (entity.type) {
                 case 'MTEXT':
+                        if (!entity.text || !entity.x) return null; 
             // Renderiza el texto en la posición y rotación correctas.
             return (
                 <Text
@@ -172,9 +173,9 @@ function DxfCanvas({ entities }) {
                     text={entity.text}
                     scaleY={-1}
                     x={entity.x}
-                    y={entity.y + 10}
+                    y={entity.y}
                     rotation={entity.rotation}
-                    fontSize={20} // Ajusta el tamaño de fuente según sea necesario
+                    fontSize={20 / scale} // Ajusta el tamaño de fuente según sea necesario
                     fill={entity.color} // Usar el color del DXF
                     // El texto se dibuja desde la esquina superior izquierda por defecto.
                     // Para evitar que el texto esté invertido por scaleY={-scale},
@@ -204,14 +205,6 @@ function DxfCanvas({ entities }) {
             strokeWidth={strokeWidth}
           />
         );      
-        return (
-          <Line
-            key={index}
-            points={[entity.start.x, entity.start.y, entity.end.x, entity.end.y]}
-            stroke={strokeColor}
-            strokeWidth={strokeWidth}
-          />
-        );
       case 'CIRCLE':
         if (!entity.center || isNaN(entity.center.x) || isNaN(entity.radius)) return null;
         return (
