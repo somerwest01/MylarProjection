@@ -86,7 +86,7 @@ function DxfCanvas({ entities }) {
       const centerY = minY + drawingHeight / 2;
 
       offsetX = (CANVAS_WIDTH / 2) - (centerX * newScale);
-      offsetY = (CANVAS_HEIGHT / 2) - (centerY * newScale);
+      offsetY = (CANVAS_HEIGHT / 2) - (centerY * (-newScale));
     } else {
       // ⚠️ SOLUCIÓN DE FALLO: Si los límites son inválidos (Infinity/NaN), reseteamos la vista.
       // Esto evita que Konva reciba un valor NaN en su Layer.x o Layer.y.
@@ -241,7 +241,6 @@ function DxfCanvas({ entities }) {
       style={{ border: '1px solid #ddd', cursor: isDragging ? 'grabbing' : 'grab' }} 
     >
       <Layer
-        // Konva usa x, y en el Layer para aplicar el offset y el pan.
         x={offset.x}
         y={offset.y}
         scaleX={scale}
