@@ -186,14 +186,6 @@ function DxfCanvas({ entities }) {
             strokeWidth={strokeWidth}
           />
         );      
-        return (
-          <Line
-            key={index}
-            points={[entity.start.x, entity.start.y, entity.end.x, entity.end.y]}
-            stroke={strokeColor}
-            strokeWidth={strokeWidth}
-          />
-        );
       case 'CIRCLE':
         if (!entity.center || isNaN(entity.center.x) || isNaN(entity.radius)) return null;
         return (
