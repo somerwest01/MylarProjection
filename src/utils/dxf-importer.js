@@ -77,6 +77,31 @@ export function extractDxfEntities(drawing) {
                     }
                 }
                 break;
+              case 'MTEXT':
+                  if (entity.text && entity.position) {
+                    validEntities.push({
+                type: 'MTEXT',
+                text: entity.text,
+                x: entity.position.x || 0,
+                 y: entity.position.y || 0,
+                rotation: entity.rotation || 0,
+              color: color // Obtén el color como lo haces con otras entidades
+              });
+            }
+        break;
+            case 'INSERT':
+    // El 'INSERT' es una referencia a la definición del bloque.
+    validEntities.push({
+        type: 'INSERT',
+        name: entity.name, // Nombre de la definición del bloque (e.g., 'PUERTA')
+        x: entity.position.x || 0,
+        y: entity.position.y || 0,
+        scaleX: entity.scaleX || 1,
+        scaleY: entity.scaleY || 1,
+        rotation: entity.rotation || 0,
+        // La entidad real del bloque (líneas, círculos, etc.) se obtiene de `dxf.blocks[entity.name]`
+    });
+    break;
 
             // IGNORAR MTEXT y otras entidades por ahora, para mantener la robustez.
             default:
@@ -87,6 +112,7 @@ export function extractDxfEntities(drawing) {
     
     return validEntities;
 }
+
 
 
 
