@@ -95,6 +95,12 @@ function DxfCanvas({ entities }) {
       offsetY = CANVAS_HEIGHT / 2;
       console.warn("ADVERTENCIA CRÍTICA: Límites del DXF inválidos o demasiado grandes. Forzando una escala mínima y centrado. Use el zoom para encontrar el dibujo.");
     }
+    console.log("DIAGNÓSTICO DE LÍMITES:");
+    console.log(`MinY: ${minY}, MaxY: ${maxY}`);
+    console.log(`DrawingHeight: ${drawingHeight}, DrawingWidth: ${drawingWidth}`);
+    console.log(`NewScale: ${newScale}`);
+    console.log(`OffsetY calculado: ${offsetY}`);
+    console.log(`Posición Y FINAL aplicada: ${offsetY + CANVAS_HEIGHT}`);
     
     // ... (resto del useEffect: setScale, setOffset, setDebugInfo)
     setScale(newScale);
