@@ -166,16 +166,17 @@ function DxfCanvas({ entities }) {
     switch (entity.type) {
             case 'MTEXT':
             if (!entity.text || !entity.x) return null; 
+            const BASE_FONT_SIZE = 1;
+        
             return (
                 <Text
                     key={index}
                     text={entity.text}
-                    scaleY={-1} // Corrige la inversión vertical causada por scaleY={-scale} del Layer
+                    scaleY={-1}
                     x={entity.x}
                     y={entity.y}
                     rotation={entity.rotation}
-                    // Es importante escalar el tamaño de la fuente inversamente para que se vea igual al hacer zoom
-                    fontSize={20 / scale} 
+                    fontSize={BASE_FONT_SIZE / scale} 
                     fill={entity.color} 
                 />
             );
