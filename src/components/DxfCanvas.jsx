@@ -62,14 +62,11 @@ function DxfCanvas({ entities }) {
                   maxY = Math.max(maxY, y);
               }
           }
-      }      else if (entity.type === 'MTEXT') {
-        const x = entity.x;
+      } else if (entity.type === 'MTEXT') {
+        // En dxf-importer.js, el MTEXT se exporta con entity.x y entity.y
+        const x = entity.x; 
         const y = entity.y;
 
-        const textX = x || (entity.position && entity.position.x) || 0;
-        const textY = y || (entity.position && entity.position.y) || 0;
-
-        
         if (isValidCoord(x)) {
             minX = Math.min(minX, x);
             maxX = Math.max(maxX, x);
