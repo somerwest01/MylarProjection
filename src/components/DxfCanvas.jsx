@@ -75,8 +75,7 @@ function DxfCanvas({ entities, blocks }) {
             minY = Math.min(minY, y);
             maxY = Math.max(maxY, y);
         }
-      }
-            } else if (entity.type === 'INSERT') {
+        } else if (entity.type === 'INSERT') {
         const x = entity.x;
         const y = entity.y;
         
