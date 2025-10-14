@@ -17,7 +17,8 @@ export function parseDxfFile(dxfText) {
  */
 const cleanMText = (text) => {
     let cleanedText = text.replace(/\{[^}]*\}|\\H[^;]*;|\\h[^;]*;|\\S[^;]*;|\\P|\\c[0-9]+|\\C[0-9]+;/g, '');
-    
+
+    cleanedText = cleanedText.replace(/[\{\}]/g, ''); 
     return cleanedText.trim();
 };
 
@@ -122,6 +123,7 @@ export function extractDxfEntities(drawing) {
     
     return validEntities;
 }
+
 
 
 
