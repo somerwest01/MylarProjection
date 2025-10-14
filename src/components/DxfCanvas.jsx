@@ -164,6 +164,22 @@ function DxfCanvas({ entities }) {
     const strokeWidth = 1 / scale;
 
     switch (entity.type) {
+            case 'MTEXT':
+            if (!entity.text || !entity.x) return null; 
+            return (
+                <Text
+                    key={index}
+                    text={entity.text}
+                    scaleY={-1} // Corrige la inversión vertical causada por scaleY={-scale} del Layer
+                    x={entity.x}
+                    y={entity.y}
+                    rotation={entity.rotation}
+                    // Es importante escalar el tamaño de la fuente inversamente para que se vea igual al hacer zoom
+                    fontSize={20 / scale} 
+                    fill={entity.color} 
+                />
+            );
+        
       case 'LINE':
         if (!entity.start || !entity.end) return null;
         const linePoints = [
