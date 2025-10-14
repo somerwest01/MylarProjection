@@ -16,7 +16,8 @@ export function parseDxfFile(dxfText) {
  * Filtra y prepara las entidades relevantes (LINE, CIRCLE, LWPOLYLINE).
  */
 const cleanMText = (text) => {
-    let cleanedText = text.replace(/\{.*?\}|\\H.*?|\\h.*?|\\S.*?;|\\P|\\c[0-9]+|\\C[0-9]+;/g, '');
+    let cleanedText = text.replace(/\{[^}]*\}|\\H[^;]*;|\\h[^;]*;|\\S[^;]*;|\\P|\\c[0-9]+|\\C[0-9]+;/g, '');
+    
     return cleanedText.trim();
 };
 
@@ -83,17 +84,22 @@ export function extractDxfEntities(drawing) {
                 }
                 break;
               case 'MTEXT':
-                  if (e.text && e.position) {
-                      validEntities.push({
-                          type: 'MTEXT',
-                          text: cleanMText(e.text), 
-                          x: Number(e.position.x || 0),
-                          y: Number(e.position.y || 0),
-                          rotation: e.rotation || 0,
-                          color: color
-                });
-    }
-    break;
+                if (e.text && e.position) {
+                    const cleanedText = cleanMText(e.text);
+                    
+
+                    if (cleanedText.length > 0) { 
+                        validEntities.push({
+                            type: 'MTEXT',
+                            text: cleanedText, 
+                            x: Number(e.position.x || 0),
+                            y: Number(e.position.y || 0),
+                            rotation: e.rotation || 0,
+                            color: color
+                        });
+                    }
+                }
+                break;
             case 'INSERT':
     // El 'INSERT' es una referencia a la definición del bloque.
     validEntities.push({
@@ -116,6 +122,7 @@ export function extractDxfEntities(drawing) {
     
     return validEntities;
 }
+
 
 
 
