@@ -10,6 +10,7 @@ function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(true); 
   const [dxfData, setDxfData] = useState(null); 
   const [dxfEntities, setDxfEntities] = useState(null);
+  const [blockDefinitions, setBlockDefinitions] = useState({});
   const [loading, setLoading] = useState(false);
 
 
@@ -22,9 +23,10 @@ function App() {
       
       try {
       const drawing = parseDxfFile(fileContent);
-      const entities = extractDxfEntities(drawing);
+      const { entities: extractedEntities, blocks: extractedBlocks } = extractDxfEntities(drawing);
 
       setDxfEntities(entities);
+      setBlockDefinitions(extractedBlocks);
       console.log(`Dibujo analizado con ${entities.length} entidades.`);
 
       } catch (error) {
@@ -78,7 +80,10 @@ function App() {
               </p>
               
               {/* ⬅️ Pasamos las entidades al componente de dibujo */}
-              <DxfCanvas entities={dxfEntities} /> 
+              <DxfCanvas 
+                entities={dxfEntities}
+                blocks={blockDefinitions}
+                /> 
             </>
           ) : (
             <p>
@@ -95,6 +100,7 @@ function App() {
 }
 
 export default App;
+
 
 
 
