@@ -19,6 +19,11 @@ const cleanMText = (text) => {
     let cleanedText = text.replace(/\{.*?\}|\\P/g, '');
     return cleanedText.trim();
 };
+const getCoords = (e) => {
+    const x = Number((e.position && e.position.x) || e.x || 0);
+    const y = Number((e.position && e.position.y) || e.y || 0);
+    return { x, y };
+};
 
 export function extractDxfEntities(drawing) {
     const entities = drawing.entities || [];
@@ -85,14 +90,15 @@ export function extractDxfEntities(drawing) {
               case 'MTEXT':
                 if (e.text && e.position) {
                     const cleanedText = cleanMText(e.text);
+                    const coords = getCoords(e);
                     
 
                     if (cleanedText.length > 0) { 
                         validEntities.push({
                             type: 'MTEXT',
                             text: cleanedText, 
-                            x: Number(e.position.x || 0),
-                            y: Number(e.position.y || 0),
+                            x: coords.x,
+                            y: coords.y,
                             rotation: e.rotation || 0,
                             color: color
                         });
@@ -104,16 +110,17 @@ export function extractDxfEntities(drawing) {
                 break;
 
               // 🔑 NUEVO CASO CRÍTICO: Para la entidad de texto simple
-              case 'TEXT':
-                if (e.text && e.position) {
+            case 'TEXT':
+                if (e.text) {
                     const cleanedText = cleanMText(e.text); 
-                    
+                    const coords = getCoords(e); // ⬅️ Obtener coordenadas robustas
+
                     if (cleanedText.length > 0) { 
                         validEntities.push({
-                            type: 'MTEXT', // Usamos el mismo tipo para que el renderizador lo pinte
+                            type: 'MTEXT', // Mapear a MTEXT para el renderizador
                             text: cleanedText, 
-                            x: Number(e.position.x || 0),
-                            y: Number(e.position.y || 0),
+                            x: coords.x,
+                            y: coords.y,
                             rotation: e.rotation || 0,
                             color: color
                         });
@@ -142,6 +149,7 @@ export function extractDxfEntities(drawing) {
     
     return validEntities;
 }
+
 
 
 
