@@ -16,7 +16,7 @@ export function parseDxfFile(dxfText) {
  * Filtra y prepara las entidades relevantes (LINE, CIRCLE, LWPOLYLINE).
  */
 const cleanMText = (text) => {
-    let cleanedText = text.replace(/\{.*?\}|\\P/g, '');
+    let cleanedText = text.replace(/\{[^}]*\}|\\H[^;]*;|\\h[^;]*;|\\S[^;]*;|\\P|\\c[0-9]+|\\C[0-9]+;/g, '');
     return cleanedText.trim();
 };
 const getCoords = (e) => {
@@ -25,7 +25,7 @@ const getCoords = (e) => {
     const y = Number((e.position && e.position.y) || e.y || 0);
     
     // 🔑 DIAGNÓSTICO CLAVE: Verificamos si las coordenadas son válidas
-    if (isNaN(x) || isNaN(y)) {
+    if (!isFinite(x) || !isFinite(y)) {
         console.error("ADVERTENCIA DE COORDENADAS: Coordenadas NaN/Inválidas para la entidad:", e.type, e);
         return null;
     }
@@ -138,6 +138,7 @@ export function extractDxfEntities(drawing) {
     
     return validEntities;
 }
+
 
 
 
