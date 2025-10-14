@@ -91,7 +91,7 @@ export function extractDxfEntities(drawing) {
                   if (e.text && e.position) {
                       validEntities.push({
                           type: 'MTEXT',
-                          text: cleanMText(e.text),
+                          text: e.text, 
                           x: Number(e.position.x || 0),
                           y: Number(e.position.y || 0),
                           rotation: e.rotation || 0,
@@ -121,5 +121,6 @@ export function extractDxfEntities(drawing) {
     
     return validEntities;
 }
+
 
 
