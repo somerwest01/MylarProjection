@@ -166,7 +166,7 @@ function DxfCanvas({ entities }) {
     switch (entity.type) {
             case 'MTEXT':
             if (!entity.text || !entity.x) return null; 
-            const BASE_FONT_SIZE = 1;
+            const BASE_FONT_SIZE = 1.0;
         
             return (
                 <Text
