@@ -180,6 +180,14 @@ function DxfCanvas({ entities }) {
             case 'MTEXT':
             if (!entity.text || !entity.x) return null; 
             const BASE_FONT_SIZE = 1.0;
+
+            console.log("RENDER TEXTO:", {
+                text: entity.text, 
+                x: entity.x, 
+                y: entity.y, 
+                fontSize: BASE_FONT_SIZE / scale, 
+                scale: scale
+            });
         
             return (
                 <Text
