@@ -76,6 +76,19 @@ function DxfCanvas({ entities, blocks }) {
             maxY = Math.max(maxY, y);
         }
       }
+            } else if (entity.type === 'INSERT') {
+        const x = entity.x;
+        const y = entity.y;
+        
+        if (isValidCoord(x)) {
+            minX = Math.min(minX, x);
+            maxX = Math.max(maxX, x);
+        }
+        if (isValidCoord(y)) {
+            minY = Math.min(minY, y);
+            maxY = Math.max(maxY, y);
+        }
+      }
     });
 
     const drawingWidth = maxX - minX;
@@ -297,29 +310,39 @@ function DxfCanvas({ entities, blocks }) {
             closed={entity.isClosed} // Cierra la figura si es una forma (e.g., rectángulo)
           />
         );
-        case 'INSERT': 
-    const blockGeometry = blocks[entity.name];
-    if (!blockGeometry) {
-        console.warn(`Definición del bloque ${entity.name} no encontrada.`);
-        return null;
-    }
+    case 'INSERT': 
+        const blockGeometry = blocks[entity.name];
+        
+        // 1. Verificar que la definición del bloque existe y tiene geometría
+        if (blockGeometry && blockGeometry.length > 0) {
+            
+            // Diagnóstico (opcional)
+            console.log(`Bloque INSERT encontrado y renderizado: ${entity.name}. Geometría interna: ${blockGeometry.length} entidades.`);
+            
+            // 2. Devolver el componente Group (el dibujo real)
+            return (
+                <Group 
+                    key={`block-${index}`}
+                    x={entity.x}
+                    y={entity.y}
+                    scaleX={entity.scaleX || 1}
+                    scaleY={entity.scaleY || 1}
+                    rotation={entity.rotation}
+                >
+                    {/* 🔑 Dibuja recursivamente la geometría interna del bloque */}
+                    {blockGeometry.map((blockEntity, blockIndex) => {
+                        return renderInternalEntity(blockEntity, blockIndex);
+                    })}
+                </Group>
+            );
 
-    return (
-        <Group 
-            key={`block-${index}`}
-            x={entity.x}
-            y={entity.y}
-            scaleX={entity.scaleX || 1}
-            scaleY={entity.scaleY || 1}
-            rotation={entity.rotation}
-        >
-            {/* 🔑 Dibuja recursivamente la geometría interna del bloque */}
-            {blockGeometry.map((blockEntity, blockIndex) => {
-                return renderInternalEntity(blockEntity, blockIndex);
-            })}
-        </Group>
-    );
-      default:
+        } else {
+            // 3. Si no se encuentra, devolver null (no dibujar)
+            console.warn(`Bloque INSERT omitido: Definición '${entity.name}' no encontrada o está vacía. Definiciones cargadas: ${Object.keys(blocks).join(', ')}`);
+            return null;
+        }
+
+    default:
         return null;
     }
   };
