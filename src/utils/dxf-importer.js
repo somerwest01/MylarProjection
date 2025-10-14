@@ -16,12 +16,7 @@ export function parseDxfFile(dxfText) {
  * Filtra y prepara las entidades relevantes (LINE, CIRCLE, LWPOLYLINE).
  */
 const cleanMText = (text) => {
-    // Expresión regular para eliminar códigos de formato MTEXT: {..;}
-    let cleanedText = text.replace(/\{.*?\}|\\H.*?|\\h.*?|\\S.*?;/g, '');
-    
-    // Elimina códigos especiales restantes, como saltos de línea (\P) o control de color (\c)
-    cleanedText = cleanedText.replace(/\\P|\\c[0-9]+|\\C[0-9]+;/g, ''); 
-    
+    let cleanedText = text.replace(/\{.*?\}|\\H.*?|\\h.*?|\\S.*?;|\\P|\\c[0-9]+|\\C[0-9]+;/g, '');
     return cleanedText.trim();
 };
 
@@ -91,7 +86,7 @@ export function extractDxfEntities(drawing) {
                   if (e.text && e.position) {
                       validEntities.push({
                           type: 'MTEXT',
-                          text: e.text, 
+                          text: cleanMText(e.text), 
                           x: Number(e.position.x || 0),
                           y: Number(e.position.y || 0),
                           rotation: e.rotation || 0,
@@ -121,6 +116,7 @@ export function extractDxfEntities(drawing) {
     
     return validEntities;
 }
+
 
 
 
