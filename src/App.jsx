@@ -25,7 +25,7 @@ function App() {
       const drawing = parseDxfFile(fileContent);
       const { entities: extractedEntities, blocks: extractedBlocks } = extractDxfEntities(drawing);
 
-      setDxfEntities(entities);
+      setDxfEntities(extractedEntities);
       setBlockDefinitions(extractedBlocks);
       console.log(`Dibujo analizado con ${entities.length} entidades.`);
 
@@ -100,6 +100,7 @@ function App() {
 }
 
 export default App;
+
 
 
 
