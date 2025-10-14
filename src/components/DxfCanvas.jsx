@@ -62,9 +62,14 @@ function DxfCanvas({ entities }) {
                   maxY = Math.max(maxY, y);
               }
           }
-      } else if (entity.type === 'MTEXT' && entity.x !== undefined && entity.y !== undefined) {
+      }      else if (entity.type === 'MTEXT') {
         const x = entity.x;
         const y = entity.y;
+
+        const textX = x || (entity.position && entity.position.x) || 0;
+        const textY = y || (entity.position && entity.position.y) || 0;
+
+        
         if (isValidCoord(x)) {
             minX = Math.min(minX, x);
             maxX = Math.max(maxX, x);
