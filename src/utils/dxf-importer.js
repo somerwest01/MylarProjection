@@ -20,11 +20,18 @@ const cleanMText = (text) => {
     return cleanedText.trim();
 };
 const getCoords = (e) => {
+    // Busca en e.position, luego en e.x/e.y directo.
     const x = Number((e.position && e.position.x) || e.x || 0);
     const y = Number((e.position && e.position.y) || e.y || 0);
+    
+    // 🔑 DIAGNÓSTICO CLAVE: Verificamos si las coordenadas son válidas
+    if (isNaN(x) || isNaN(y)) {
+        console.error("ADVERTENCIA DE COORDENADAS: Coordenadas NaN/Inválidas para la entidad:", e.type, e);
+        return null;
+    }
+    
     return { x, y };
 };
-
 export function extractDxfEntities(drawing) {
     const entities = drawing.entities || [];
     const validEntities = [];
@@ -87,13 +94,13 @@ export function extractDxfEntities(drawing) {
                     }
                 }
                 break;
-              case 'MTEXT':
-                if (e.text && e.position) {
+            case 'MTEXT':
+            case 'TEXT': // 🔑 AÑADIDO: Ahora maneja TEXT y MTEXT
+                if (e.text) {
                     const cleanedText = cleanMText(e.text);
                     const coords = getCoords(e);
                     
-
-                    if (cleanedText.length > 0) { 
+                    if (coords && cleanedText.length > 0) { 
                         validEntities.push({
                             type: 'MTEXT',
                             text: cleanedText, 
@@ -102,28 +109,10 @@ export function extractDxfEntities(drawing) {
                             rotation: e.rotation || 0,
                             color: color
                         });
-                    }
-                }
-                break;
-            case 'MTEXT':
-                // ... (código existente)
-                break;
-
-              // 🔑 NUEVO CASO CRÍTICO: Para la entidad de texto simple
-            case 'TEXT':
-                if (e.text) {
-                    const cleanedText = cleanMText(e.text); 
-                    const coords = getCoords(e); // ⬅️ Obtener coordenadas robustas
-
-                    if (cleanedText.length > 0) { 
-                        validEntities.push({
-                            type: 'MTEXT', // Mapear a MTEXT para el renderizador
-                            text: cleanedText, 
-                            x: coords.x,
-                            y: coords.y,
-                            rotation: e.rotation || 0,
-                            color: color
-                        });
+                        // 🔑 DIAGNÓSTICO CLAVE: Verificamos si se agregó la entidad
+                        console.log(`TEXTO AGREGADO: '${cleanedText}' en (${coords.x}, ${coords.y})`);
+                    } else {
+                         console.warn(`TEXTO OMITIDO: Entidad ${e.type} descartada (vacía o coordenadas inválidas).`);
                     }
                 }
                 break;
@@ -149,6 +138,7 @@ export function extractDxfEntities(drawing) {
     
     return validEntities;
 }
+
 
 
 
