@@ -27,7 +27,7 @@ function App() {
 
       setDxfEntities(extractedEntities);
       setBlockDefinitions(extractedBlocks);
-      console.log(`Dibujo analizado con ${entities.length} entidades.`);
+      console.log(`Dibujo analizado con ${extractedEntities.length} entidades.`);
 
       } catch (error) {
         console.error("Error al procesar el archivo:", error.message);
@@ -100,6 +100,7 @@ function App() {
 }
 
 export default App;
+
 
 
 
