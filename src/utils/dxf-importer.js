@@ -15,6 +15,16 @@ export function parseDxfFile(dxfText) {
 /**
  * Filtra y prepara las entidades relevantes (LINE, CIRCLE, LWPOLYLINE).
  */
+const cleanMText = (text) => {
+    // Expresión regular para eliminar códigos de formato MTEXT: {..;}
+    let cleanedText = text.replace(/\{.*?\}|\\H.*?|\\h.*?|\\S.*?;/g, '');
+    
+    // Elimina códigos especiales restantes, como saltos de línea (\P) o control de color (\c)
+    cleanedText = cleanedText.replace(/\\P|\\c[0-9]+|\\C[0-9]+;/g, ''); 
+    
+    return cleanedText.trim();
+};
+
 export function extractDxfEntities(drawing) {
     const entities = drawing.entities || [];
     const validEntities = [];
@@ -78,15 +88,15 @@ export function extractDxfEntities(drawing) {
                 }
                 break;
               case 'MTEXT':
-    if (e.text && e.position) {
-        validEntities.push({
-            type: 'MTEXT',
-            text: e.text,
-            x: Number(e.position.x || 0),
-            y: Number(e.position.y || 0),
-            rotation: e.rotation || 0,
-            color: color
-        });
+                  if (e.text && e.position) {
+                      validEntities.push({
+                          type: 'MTEXT',
+                          text: cleanMText(e.text),
+                          x: Number(e.position.x || 0),
+                          y: Number(e.position.y || 0),
+                          rotation: e.rotation || 0,
+                          color: color
+                });
     }
     break;
             case 'INSERT':
@@ -111,4 +121,5 @@ export function extractDxfEntities(drawing) {
     
     return validEntities;
 }
+
 
