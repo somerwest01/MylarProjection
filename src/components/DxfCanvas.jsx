@@ -197,7 +197,7 @@ function DxfCanvas({ entities }) {
                     x={entity.x}
                     y={entity.y}
                     rotation={entity.rotation}
-                    fontSize={BASE_FONT_SIZE / scale} 
+                    fontSize={BASE_FONT_SIZE} 
                     fill={entity.color} 
                 />
             );
