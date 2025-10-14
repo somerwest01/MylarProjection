@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { Stage, Layer, Line, Circle, Text } from 'react-konva';
+import { Stage, Layer, Line, Circle, Text, Group } from 'react-konva';
 
 const CANVAS_WIDTH = 1000;
 const CANVAS_HEIGHT = 600;
@@ -7,7 +7,7 @@ const INITIAL_SCALE = 1;
 
 const isSafeNumber = (c) => typeof c === 'number' && isFinite(c);
 
-function DxfCanvas({ entities }) {
+function DxfCanvas({ entities, blocks }) {
   const stageRef = useRef(null);
   const [scale, setScale] = useState(INITIAL_SCALE);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
@@ -169,7 +169,50 @@ function DxfCanvas({ entities }) {
     setLastPos({ x: e.evt.clientX, y: e.evt.clientY });
   }, [isDragging, lastPos]);
 
-  // Función para renderizar una entidad
+  const renderInternalEntity = (blockEntity, blockIndex) => {
+    const strokeColor = blockEntity.color || 'gray'; 
+    const strokeWidth = 1 / scale; 
+
+    switch (blockEntity.type) {
+        case 'LINE':
+            if (!blockEntity.start || !blockEntity.end) return null;
+            const linePoints = [blockEntity.start.x, blockEntity.start.y, blockEntity.end.x, blockEntity.end.y];
+            return (
+                <Line
+                    key={`line-${blockIndex}`}
+                    points={linePoints}
+                    stroke={strokeColor}
+                    strokeWidth={strokeWidth}
+                />
+            );
+        case 'CIRCLE':
+            if (!blockEntity.center || isNaN(blockEntity.center.x) || isNaN(blockEntity.radius)) return null;
+            return (
+                <Circle
+                    key={`circle-${blockIndex}`}
+                    x={blockEntity.center.x}
+                    y={blockEntity.center.y}
+                    radius={blockEntity.radius}
+                    stroke={strokeColor}
+                    strokeWidth={strokeWidth}
+                />
+            );
+        case 'POLYLINE_GEOM':
+             if (!blockEntity.points || blockEntity.points.length < 4) return null;
+             return (
+                 <Line
+                     key={`poly-${blockIndex}`}
+                     points={blockEntity.points}
+                     stroke={strokeColor}
+                     strokeWidth={strokeWidth}
+                     closed={blockEntity.isClosed}
+                 />
+             );
+        default:
+            return null;
+    }
+};
+ 
   const renderEntity = (entity, index) => {
     if (!entity || !entity.type) return null;
     
@@ -254,6 +297,28 @@ function DxfCanvas({ entities }) {
             closed={entity.isClosed} // Cierra la figura si es una forma (e.g., rectángulo)
           />
         );
+        case 'INSERT': 
+    const blockGeometry = blocks[entity.name];
+    if (!blockGeometry) {
+        console.warn(`Definición del bloque ${entity.name} no encontrada.`);
+        return null;
+    }
+
+    return (
+        <Group 
+            key={`block-${index}`}
+            x={entity.x}
+            y={entity.y}
+            scaleX={entity.scaleX || 1}
+            scaleY={entity.scaleY || 1}
+            rotation={entity.rotation}
+        >
+            {/* 🔑 Dibuja recursivamente la geometría interna del bloque */}
+            {blockGeometry.map((blockEntity, blockIndex) => {
+                return renderInternalEntity(blockEntity, blockIndex);
+            })}
+        </Group>
+    );
       default:
         return null;
     }
