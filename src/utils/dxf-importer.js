@@ -12,9 +12,6 @@ export function parseDxfFile(dxfText) {
   }
 }
 
-/**
- * Filtra y prepara las entidades relevantes (LINE, CIRCLE, LWPOLYLINE).
- */
 const cleanMText = (text) => {
     let cleanedText = text.replace(/\{[^}]*\}|\\H[^;]*;|\\h[^;]*;|\\S[^;]*;|\\P|\\c[0-9]+|\\C[0-9]+;/g, '');
     return cleanedText.trim();
@@ -35,8 +32,17 @@ const getCoords = (e) => {
 export function extractDxfEntities(drawing) {
     const entities = drawing.entities || [];
     const validEntities = [];
+    const blockDefinitions = {}; 
 
     const isNumber = (n) => typeof n === 'number' && isFinite(n);
+
+      const blocks = drawing.blocks || {};
+    for (const name in blocks) {
+        if (blocks.hasOwnProperty(name)) {
+            // Un bloque tiene sus propias entidades (líneas, círculos, etc.)
+            blockDefinitions[name] = blocks[name].entities || []; 
+        }
+    }
     
     entities.forEach(e => {
         const color = e.colorIndex || 'black';
@@ -117,16 +123,16 @@ export function extractDxfEntities(drawing) {
                 }
                 break;
             case 'INSERT':
-    // El 'INSERT' es una referencia a la definición del bloque.
-    validEntities.push({
-        type: 'INSERT',
-        name: e.name, 
-        x: Number(e.position.x || 0),
-        y: Number(e.position.y || 0),
-        scaleX: e.scaleX || 1,
-        scaleY: e.scaleY || 1,
-        rotation: e.rotation || 0,
-    });
+                validEntities.push({
+                    type: 'INSERT',
+                    name: e.name, // Nombre del bloque referenciado
+                    x: Number(e.position.x || 0),
+                    y: Number(e.position.y || 0),
+                    scaleX: e.scaleX || 1,
+                    scaleY: e.scaleY || 1,
+                    rotation: e.rotation || 0,
+                    color: color
+                });
     break;
 
             // IGNORAR MTEXT y otras entidades por ahora, para mantener la robustez.
@@ -136,7 +142,10 @@ export function extractDxfEntities(drawing) {
         }
     });
     
-    return validEntities;
+    return {
+        entities: validEntities,
+        blocks: blockDefinitions
+    };
 }
 
 
