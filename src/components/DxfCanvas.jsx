@@ -595,7 +595,7 @@ return (
             {isTypingLength && (
                 <Text
         text={`Escriba longitud (mm) y presione Enter: ${typedLength}`} 
-        fontSize={16}
+        fontSize={14}
         fill="red"
         x={CANVAS_WIDTH / 2 - 150} 
         y={10}
