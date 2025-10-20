@@ -224,14 +224,6 @@ const handleMouseDown = useCallback((e) => {
     }
 }, [drawingMode, lineStartPoint, getRelativePoint, setEntities]);
   
-
-  // Manejo del arrastre (Pan)
-  const handleMouseDown = useCallback((e) => {
-    e.evt.preventDefault();
-    setIsDragging(true);
-    setLastPos({ x: e.evt.clientX, y: e.evt.clientY });
-  }, []);
-
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
   }, []);
@@ -499,80 +491,82 @@ const handleMouseMove = useCallback((e) => {
     }
   };
 
-  return (
+return (
     <Stage
       ref={stageRef}
       width={CANVAS_WIDTH}
       height={CANVAS_HEIGHT}
-      onWheel={handleWheel} // ⬅️ Zoom
-      onMouseDown={handleMouseDown} // ⬅️ Pan
-      onMouseUp={handleMouseUp} // ⬅️ Pan
-      onMouseMove={handleMouseMove} // ⬅️ Pan
-      style={{ border: '1px solid #ddd', cursor: isDragging ? 'grabbing' : 'grab' }} 
+      onWheel={handleWheel} 
+      onMouseDown={handleMouseDown} 
+      onMouseUp={handleMouseUp} 
+      onMouseMove={handleMouseMove} 
+      style={{ border: '1px solid #ddd', cursor: isDragging ? 'grabbing' : (drawingMode === 'line' ? 'crosshair' : 'grab') }} // ✨ Añadir cursor 'crosshair'
     >
-      <Layer
-        x={offset.x}
-        y={offset.y}
-        scaleX={scale}
-        scaleY={-scale}
-      >
-        {/* 🔑 HUD: Medida de la línea (visible solo en modo 'line' con punto de inicio) */}
-{drawingMode === 'line' && lineStartPoint && currentEndPoint && (
-    <Layer>
-        {/* 1. Calcular y mostrar la longitud */}
-        <Text
-            text={(() => {
-                const dx = currentEndPoint.x - lineStartPoint.x;
-                const dy = currentEndPoint.y - lineStartPoint.y;
-                const length = Math.round(Math.sqrt(dx * dx + dy * dy));
-                return `Longitud: ${length} mm`;
-            })()}
-            fontSize={14}
-            fill="blue"
-            x={stageRef.current.getPointerPosition().x + 10} // Mostrar al lado del cursor
-            y={stageRef.current.getPointerPosition().y}
-            fontStyle="bold"
-            // Escala inversa para que el texto no se vea afectado por el zoom del dibujo
-            scaleX={1 / scale} 
-            scaleY={1 / scale} 
-        />
-    </Layer>
-)}
+        {/* 1. CAPA PRINCIPAL DE DIBUJO (CON ESCALA Y OFFSET) */}
+        <Layer
+            x={offset.x}
+            y={offset.y}
+            scaleX={scale}
+            scaleY={-scale}
+        >
+            {/* 🔑 Vista previa de la línea (DENTRO de la capa escalada) */}
+            {drawingMode === 'line' && lineStartPoint && currentEndPoint && (
+                <Line
+                    points={[lineStartPoint.x, lineStartPoint.y, currentEndPoint.x, currentEndPoint.y]}
+                    stroke="gray"
+                    strokeWidth={1 / scale} // Se mantiene delgado sin importar el zoom
+                    dash={[10 / scale, 5 / scale]} 
+                />
+            )}
+            {/* Todas las entidades permanentes */}
+            {entities.map((entity, index) => renderEntity(entity, index))}
+        </Layer>
+        
+        {/* 2. CAPA DE HUD Y DEBUG (SIN ESCALA NI OFFSET - se superpone) */}
+        {/* Usamos un solo Layer para ambos elementos de la UI/HUD */}
+        <Layer> 
+            {/* HUD: Medida de la línea */}
+            {drawingMode === 'line' && lineStartPoint && currentEndPoint && stageRef.current && (
+                <Text
+                    text={(() => {
+                        const dx = currentEndPoint.x - lineStartPoint.x;
+                        const dy = currentEndPoint.y - lineStartPoint.y;
+                        // Longitud sin decimales
+                        const length = Math.round(Math.sqrt(dx * dx + dy * dy)); 
+                        return `Longitud: ${length} mm`;
+                    })()}
+                    fontSize={14}
+                    fill="blue"
+                    // Posicionamos el texto basándonos en las coordenadas de la pantalla (cursor)
+                    x={stageRef.current.getPointerPosition().x + 10} 
+                    y={stageRef.current.getPointerPosition().y}
+                    fontStyle="bold"
+                />
+            )}
 
-{/* 🔑 Capa para la Información de depuración (Mantenla o bórrala) */}
-<Layer> 
-  {/* ... (código existente para el debug info) ... */}
-  <Text 
-      text={debugInfo} 
-      fontSize={12} 
-      fill="blue" 
-      x={10} 
-      y={CANVAS_HEIGHT - 30} 
-  />
-</Layer>
-        {/* 🔑 Vista previa de la línea */}
-{drawingMode === 'line' && lineStartPoint && currentEndPoint && (
-  <Line
-    points={[lineStartPoint.x, lineStartPoint.y, currentEndPoint.x, currentEndPoint.y]}
-    stroke="gray"
-    strokeWidth={1 / scale}
-    dash={[10 / scale, 5 / scale]} // Línea punteada
-  />
-)}
-        {entities.map((entity, index) => renderEntity(entity, index))}
-      </Layer>
-       {/* Información de depuración superpuesta */}
-      <Layer> 
-        <Text 
-            text={debugInfo} 
-            fontSize={12} 
-            fill="blue" 
-            x={10} 
-            y={CANVAS_HEIGHT - 30} 
-        />
-      </Layer>
+            {/* Mensaje de tecleo de longitud (para informar al usuario) */}
+            {isTypingLength && (
+                <Text
+                    text={`Escriba longitud (mm) y presione Enter: ${lengthInputRef.current?.value || ''}`}
+                    fontSize={16}
+                    fill="red"
+                    x={CANVAS_WIDTH / 2 - 150} 
+                    y={10}
+                    fontStyle="bold"
+                />
+            )}
+            
+            {/* Información de depuración */}
+            <Text 
+                text={debugInfo} 
+                fontSize={12} 
+                fill="blue" 
+                x={10} 
+                y={CANVAS_HEIGHT - 30} 
+            />
+        </Layer>
     </Stage>
-  );
+);
 }
 
 export default DxfCanvas;
