@@ -6,33 +6,31 @@ import { parseDxfFile, extractDxfEntities } from './utils/dxf-importer';
 import './App.css'; 
 
 function App() {
-  const [activeMenu, setActiveMenu] = useState('design'); 
-  const [isMenuOpen, setIsMenuOpen] = useState(true); 
-  const [dxfData, setDxfData] = useState(null); 
-  // 🔑 CAMBIO CLAVE: Inicializamos con un array vacío para que el Canvas se monte inmediatamente.
-  const [dxfEntities, setDxfEntities] = useState([]); 
+ const [activeMenu, setActiveMenu] = useState('design');
+  const [isMenuOpen, setIsMenuOpen] = useState(true);
+  const [dxfData, setDxfData] = useState(null);
+  const [dxfEntities, setDxfEntities] = useState([]);
   const [blockDefinitions, setBlockDefinitions] = useState({});
   const [loading, setLoading] = useState(false);
   const [drawingMode, setDrawingMode] = useState('pan');
-  // Eliminamos isCleanCanvas, ya no es estrictamente necesario con la nueva lógica.
-  // const [isCleanCanvas, setIsCleanCanvas] = useState(true); 
-
-  // Estado para manejar el mensaje de error de importación (Advertencia)
-  const [importError, setImportError] = useState(false); 
+  const [importError, setImportError] = useState(false);
+  const [isCanvasInitialized, setIsCanvasInitialized] = useState(false); 
 
   const handleNewDrawing = () => {
-    // Restablece el lienzo a un estado vacío y el modo de dibujo a 'pan'.
     setDxfEntities([]);
     setBlockDefinitions({});
     setDrawingMode('pan'); 
-    setImportError(false); // Limpiamos cualquier error previo
-    
+    setImportError(false);
+    setIsCanvasInitialized(true); 
+
     console.log('Nuevo dibujo iniciado.');
   };
 
   const handleDxfFileSelect = (file) => {
     setLoading(true);
     setImportError(false); // Limpiamos errores antes de intentar cargar
+    setIsCanvasInitialized(true); 
+    
     const reader = new FileReader();
     
     reader.onload = async (e) => {
@@ -68,7 +66,14 @@ function App() {
   // Lógica de Renderizado Simplificada
   let canvasContent;
   
-  if (loading) {
+  if (!isCanvasInitialized) {
+    canvasContent = (
+      <p style={{ textAlign: 'center' }}>
+        ¡Bienvenido!<br/>
+        Selecciona **"➕ Nuevo Dibujo"** o **"Importar DXF"** para comenzar a diseñar.
+      </p>
+    );
+  } else if (loading) {
     canvasContent = <p>Cargando y analizando dibujo...</p>;
   } else if (importError && dxfEntities.length === 0) {
     // Caso: Error de importación (Archivo vacío)
@@ -134,3 +139,4 @@ function App() {
 }
 
 export default App;
+
