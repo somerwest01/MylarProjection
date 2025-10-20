@@ -7,14 +7,41 @@ const INITIAL_SCALE = 1;
 
 const isSafeNumber = (c) => typeof c === 'number' && isFinite(c);
 
-function DxfCanvas({ entities, blocks }) {
+function DxfCanvas({ entities, setEntities, blocks, drawingMode, setDrawingMode }) {
   const stageRef = useRef(null);
   const [scale, setScale] = useState(INITIAL_SCALE);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [lastPos, setLastPos] = useState({ x: 0, y: 0 });
-
   const [debugInfo, setDebugInfo] = useState('');
+  const [lineStartPoint, setLineStartPoint] = useState(null);
+  const [currentEndPoint, setCurrentEndPoint] = useState(null);
+  const [tempEntities, setTempEntities] = useState([]);
+  const lengthInputRef = useRef(null); 
+  const [isTypingLength, setIsTypingLength] = useState(false);
+
+  
+
+  const getRelativePoint = useCallback((stage) => {
+    const pointer = stage.getPointerPosition();
+    if (!pointer) return null;
+
+    // Convertir de coordenadas de la pantalla a coordenadas del Layer (mundo)
+    const layer = stage.children[0]; // Asume que Layer es el primer hijo de Stage
+    const layerTransform = layer.getAbsoluteTransform().copy();
+    
+    // Invertir la transformación Y (debido al scaleY=-scale)
+    layerTransform.invert();
+    
+    // Aplicar la transformación y obtener el punto relativo
+    const relativePoint = layerTransform.point({ x: pointer.x, y: pointer.y });
+    
+    // Retornamos solo números enteros (sin decimales)
+    return { 
+        x: Math.round(relativePoint.x), 
+        y: Math.round(relativePoint.y) 
+    };
+}, []); 
   
   // EFECTO para centrar y escalar el dibujo al cargar
   useEffect(() => {
@@ -156,6 +183,47 @@ function DxfCanvas({ entities, blocks }) {
     });
     setScale(newScale);
   };
+const handleMouseDown = useCallback((e) => {
+    e.evt.preventDefault();
+    const stage = stageRef.current;
+    if (!stage) return;
+    
+    // 🔑 LÓGICA DE DIBUJO DE LÍNEA
+    if (drawingMode === 'line') {
+      const point = getRelativePoint(stage);
+      if (!point) return;
+
+      if (!lineStartPoint) {
+        // Primer clic: Iniciar la línea
+        setLineStartPoint(point);
+        setCurrentEndPoint(point); // El punto final provisional es el inicio
+        setIsTypingLength(false); // Asegúrate de que no estamos en modo tecleo
+        
+      } else {
+        // Segundo clic: Terminar la línea
+        const newLine = {
+          type: 'LINE',
+          start: lineStartPoint,
+          end: point,
+          color: 'green' // Nuevo color para la línea dibujada
+        };
+        
+        // Agregar la nueva línea a las entidades permanentes
+        setEntities(prevEntities => [...prevEntities, newLine]);
+        
+        // El punto de destino se convierte en el nuevo punto de inicio (dibujo continuo)
+        setLineStartPoint(point); 
+      }
+      return; // Salir para no activar el Pan
+    }
+
+    // 🔑 LÓGICA DE PAN (si no estamos dibujando)
+    if (drawingMode === 'pan') {
+      setIsDragging(true);
+      setLastPos({ x: e.evt.clientX, y: e.evt.clientY });
+    }
+}, [drawingMode, lineStartPoint, getRelativePoint, setEntities]);
+  
 
   // Manejo del arrastre (Pan)
   const handleMouseDown = useCallback((e) => {
@@ -168,18 +236,103 @@ function DxfCanvas({ entities, blocks }) {
     setIsDragging(false);
   }, []);
 
-  const handleMouseMove = useCallback((e) => {
-    if (!isDragging) return;
-    const dx = e.evt.clientX - lastPos.x;
-    const dy = e.evt.clientY - lastPos.y;
+const handleMouseMove = useCallback((e) => {
+    const stage = stageRef.current;
+    if (!stage) return;
+    
+    // Lógica de Pan
+    if (drawingMode === 'pan' && isDragging) {
+      // ... (código existente para Pan) ...
+      const dx = e.evt.clientX - lastPos.x;
+      const dy = e.evt.clientY - lastPos.y;
 
-    setOffset(prevOffset => ({
-      x: prevOffset.x + dx,
-      y: prevOffset.y + dy,
-    }));
+      setOffset(prevOffset => ({
+        x: prevOffset.x + dx,
+        y: prevOffset.y + dy,
+      }));
 
-    setLastPos({ x: e.evt.clientX, y: e.evt.clientY });
-  }, [isDragging, lastPos]);
+      setLastPos({ x: e.evt.clientX, y: e.evt.clientY });
+      return; // Salir
+    }
+    
+    // 🔑 LÓGICA DE VISTA PREVIA DE LÍNEA
+    if (drawingMode === 'line' && lineStartPoint && !isTypingLength) {
+        const point = getRelativePoint(stage);
+        if (point) {
+            setCurrentEndPoint(point);
+        }
+    }
+}, [isDragging, lastPos, drawingMode, lineStartPoint, isTypingLength, getRelativePoint]);
+
+  useEffect(() => {
+    // 🔑 Manejador de entrada de teclado para la longitud
+    const handleKeyDown = (e) => {
+      // Solo interesa si estamos en modo 'line' Y ya tenemos un punto de inicio
+      if (drawingMode !== 'line' || !lineStartPoint) return; 
+
+      // Si el usuario presiona Enter para confirmar la longitud
+      if (e.key === 'Enter' && isTypingLength && lengthInputRef.current) {
+        const length = parseInt(lengthInputRef.current.value);
+        
+        if (isNaN(length) || length <= 0) {
+            // Si el valor no es válido, salimos del modo tecleo
+            setIsTypingLength(false);
+            return;
+        }
+
+        // 1. Obtener el ángulo de la línea de vista previa (mouse position)
+        const dx_preview = currentEndPoint.x - lineStartPoint.x;
+        const dy_preview = currentEndPoint.y - lineStartPoint.y;
+        const angle = Math.atan2(dy_preview, dx_preview);
+        
+        // 2. Calcular el nuevo punto final usando la longitud y el ángulo
+        const newEndPoint = {
+            x: lineStartPoint.x + length * Math.cos(angle),
+            y: lineStartPoint.y + length * Math.sin(angle)
+        };
+        
+        // 3. Crear la nueva línea (con coordenadas redondeadas)
+        const newLine = {
+            type: 'LINE',
+            start: lineStartPoint,
+            end: { x: Math.round(newEndPoint.x), y: Math.round(newEndPoint.y) },
+            color: 'green' 
+        };
+        
+        // 4. Agregar la línea, establecer el nuevo inicio y salir del modo tecleo
+        setEntities(prevEntities => [...prevEntities, newLine]);
+        setLineStartPoint(newLine.end); // Continuar dibujo
+        setIsTypingLength(false);
+        setCurrentEndPoint(newLine.end); // La vista previa comienza desde el nuevo final
+        
+        // 5. Opcional: Centrar la vista en el nuevo punto (si es necesario)
+        // Por ahora, solo limpiamos el input
+        lengthInputRef.current.value = '';
+        
+      } 
+      // Si el usuario presiona una tecla numérica y NO está tecleando AÚN
+      else if (['0','1','2','3','4','5','6','7','8','9'].includes(e.key) && !isTypingLength) {
+          setIsTypingLength(true);
+          // Opcional: Enfocar el input
+          if (lengthInputRef.current) {
+              lengthInputRef.current.focus();
+              lengthInputRef.current.value = e.key; // Coloca el primer dígito
+          }
+      } 
+      // Si el usuario presiona ESC para cancelar
+      else if (e.key === 'Escape') {
+          setLineStartPoint(null); // Cancela el dibujo
+          setCurrentEndPoint(null);
+          setIsTypingLength(false);
+          if (lengthInputRef.current) lengthInputRef.current.value = '';
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+
+}, [drawingMode, lineStartPoint, currentEndPoint, setEntities, isTypingLength]);
+  
 
   const renderInternalEntity = (blockEntity, blockIndex) => {
     const strokeColor = blockEntity.color || 'gray'; 
@@ -363,6 +516,49 @@ function DxfCanvas({ entities, blocks }) {
         scaleX={scale}
         scaleY={-scale}
       >
+        {/* 🔑 HUD: Medida de la línea (visible solo en modo 'line' con punto de inicio) */}
+{drawingMode === 'line' && lineStartPoint && currentEndPoint && (
+    <Layer>
+        {/* 1. Calcular y mostrar la longitud */}
+        <Text
+            text={(() => {
+                const dx = currentEndPoint.x - lineStartPoint.x;
+                const dy = currentEndPoint.y - lineStartPoint.y;
+                const length = Math.round(Math.sqrt(dx * dx + dy * dy));
+                return `Longitud: ${length} mm`;
+            })()}
+            fontSize={14}
+            fill="blue"
+            x={stageRef.current.getPointerPosition().x + 10} // Mostrar al lado del cursor
+            y={stageRef.current.getPointerPosition().y}
+            fontStyle="bold"
+            // Escala inversa para que el texto no se vea afectado por el zoom del dibujo
+            scaleX={1 / scale} 
+            scaleY={1 / scale} 
+        />
+    </Layer>
+)}
+
+{/* 🔑 Capa para la Información de depuración (Mantenla o bórrala) */}
+<Layer> 
+  {/* ... (código existente para el debug info) ... */}
+  <Text 
+      text={debugInfo} 
+      fontSize={12} 
+      fill="blue" 
+      x={10} 
+      y={CANVAS_HEIGHT - 30} 
+  />
+</Layer>
+        {/* 🔑 Vista previa de la línea */}
+{drawingMode === 'line' && lineStartPoint && currentEndPoint && (
+  <Line
+    points={[lineStartPoint.x, lineStartPoint.y, currentEndPoint.x, currentEndPoint.y]}
+    stroke="gray"
+    strokeWidth={1 / scale}
+    dash={[10 / scale, 5 / scale]} // Línea punteada
+  />
+)}
         {entities.map((entity, index) => renderEntity(entity, index))}
       </Layer>
        {/* Información de depuración superpuesta */}
