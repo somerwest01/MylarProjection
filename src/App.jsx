@@ -93,7 +93,7 @@ function App() {
               
               {/* ⬅️ Pasamos las entidades al componente de dibujo */}
               <DxfCanvas 
-                entities={dxfEntities}
+                entities={dxfEntities || []}
                 setEntities={setDxfEntities}
                 blocks={blockDefinitions}
                 drawingMode={drawingMode}
@@ -113,6 +113,7 @@ function App() {
 }
 
 export default App;
+
 
 
 
