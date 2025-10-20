@@ -197,35 +197,41 @@ const handleMouseDown = useCallback((e) => {
     const stage = stageRef.current;
     if (!stage) return;
 
+    // Ignorar clics mientras el usuario está tecleando la longitud
     if (isTypingLength) return; 
     
     // 🔑 LÓGICA DE DIBUJO DE LÍNEA
     if (drawingMode === 'line') {
-      const point = getRelativePoint(stage);
-      if (!point) return;
+      const clickedPoint = getRelativePoint(stage);
+      if (!clickedPoint) return;
 
       if (!lineStartPoint) {
         // Primer clic: Iniciar la línea
-        setLineStartPoint(point);
-        setCurrentEndPoint(point); // El punto final provisional es el inicio
-        setIsTypingLength(false); // Asegúrate de que no estamos en modo tecleo
+        setLineStartPoint(clickedPoint);
+        setCurrentEndPoint(clickedPoint); // El punto final provisional es el inicio
         
       } else {
         // Segundo clic: Terminar la línea
+        
+        // 🔑 CRÍTICO: Usar currentEndPoint, que ya ha sido modificado por SNAP/ORTHO
+        // Si por alguna razón currentEndPoint es null, usamos el punto del clic
+        const finalPoint = currentEndPoint || clickedPoint; 
+        
         const newLine = {
           type: 'LINE',
           start: lineStartPoint,
-          end: point,
-          color: 'green' // Nuevo color para la línea dibujada
+          end: finalPoint, // ✅ Usar el punto ajustado por SNAP/ORTHO
+          color: 'green' 
         };
         
-        // Agregar la nueva línea a las entidades permanentes
+        // Agregar la nueva línea
         setEntities(prevEntities => [...prevEntities, newLine]);
         
-        // El punto de destino se convierte en el nuevo punto de inicio (dibujo continuo)
-        setLineStartPoint(point); 
+        // El punto de destino (ajustado) se convierte en el nuevo punto de inicio (dibujo continuo)
+        setLineStartPoint(finalPoint); 
+        setCurrentEndPoint(finalPoint); // Reiniciar la vista previa desde el nuevo punto
       }
-      return; // Salir para no activar el Pan
+      return; 
     }
 
     // 🔑 LÓGICA DE PAN (si no estamos dibujando)
@@ -233,7 +239,7 @@ const handleMouseDown = useCallback((e) => {
       setIsDragging(true);
       setLastPos({ x: e.evt.clientX, y: e.evt.clientY });
     }
-}, [drawingMode, lineStartPoint, getRelativePoint, setEntities]);
+}, [drawingMode, lineStartPoint, currentEndPoint, getRelativePoint, setEntities, isTypingLength]);
   
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
@@ -318,6 +324,7 @@ const handleMouseMove = useCallback((e) => {
         setCurrentEndPoint(point);
     }
 }, [isDragging, lastPos, drawingMode, lineStartPoint, isTypingLength, getRelativePoint, isOrthoActive, getSnappedPoint]);
+  
   useEffect(() => {
     // 🔑 Manejador de entrada de teclado para la longitud
     const handleKeyDown = (e) => {
