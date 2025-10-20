@@ -167,7 +167,7 @@ useEffect(() => {
     setScale(newScale);
     setOffset({ x: offsetX, y: offsetY });
     setDebugInfo(`Scale: ${newScale.toFixed(8)}, Offset: (${offsetX.toFixed(0)}, ${offsetY.toFixed(0)})`);
-  }, [entities]); 
+  }, []); 
 
     const handleWheel = (e) => {
     e.evt.preventDefault();
