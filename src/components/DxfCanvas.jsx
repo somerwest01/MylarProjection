@@ -17,9 +17,8 @@ function DxfCanvas({ entities, setEntities, blocks, drawingMode, setDrawingMode 
   const [lineStartPoint, setLineStartPoint] = useState(null);
   const [currentEndPoint, setCurrentEndPoint] = useState(null);
   const [tempEntities, setTempEntities] = useState([]);
-  const lengthInputRef = useRef(null); 
   const [isTypingLength, setIsTypingLength] = useState(false);
-
+  const [typedLength, setTypedLength] = useState(''); 
   
 
   const getRelativePoint = useCallback((stage) => {
@@ -263,12 +262,13 @@ const handleMouseMove = useCallback((e) => {
       if (drawingMode !== 'line' || !lineStartPoint) return; 
 
       // Si el usuario presiona Enter para confirmar la longitud
-      if (e.key === 'Enter' && isTypingLength && lengthInputRef.current) {
-        const length = parseInt(lengthInputRef.current.value);
+      if (e.key === 'Enter' && isTypingLength) {
+        e.preventDefault(); 
+        const length = parseInt(typedLength);
         
         if (isNaN(length) || length <= 0) {
-            // Si el valor no es válido, salimos del modo tecleo
             setIsTypingLength(false);
+            setTypedLength('');
             return;
         }
 
@@ -294,29 +294,39 @@ const handleMouseMove = useCallback((e) => {
         // 4. Agregar la línea, establecer el nuevo inicio y salir del modo tecleo
         setEntities(prevEntities => [...prevEntities, newLine]);
         setLineStartPoint(newLine.end); // Continuar dibujo
+        setTypedLength('');
         setIsTypingLength(false);
-        setCurrentEndPoint(newLine.end); // La vista previa comienza desde el nuevo final
         
-        // 5. Opcional: Centrar la vista en el nuevo punto (si es necesario)
-        // Por ahora, solo limpiamos el input
-        lengthInputRef.current.value = '';
+        setCurrentEndPoint(newLine.end); // La vista previa comienza desde el nuevo final
         
       } 
       // Si el usuario presiona una tecla numérica y NO está tecleando AÚN
-      else if (['0','1','2','3','4','5','6','7','8','9'].includes(e.key) && !isTypingLength) {
-          setIsTypingLength(true);
-          // Opcional: Enfocar el input
-          if (lengthInputRef.current) {
-              lengthInputRef.current.focus();
-              lengthInputRef.current.value = e.key; // Coloca el primer dígito
+      else if (['0','1','2','3','4','5','6','7','8','9'].includes(e.key)) {
+         e.preventDefault();
+         const newDigit = e.key;
+
+              if (!isTypingLength) {
+              setIsTypingLength(true);
+              setTypedLength(newDigit);
+          } else {
+              setTypedLength(prevLength => prevLength + newDigit);
           }
-      } 
+        }
+      else if (e.key === 'Backspace' && isTypingLength) {
+          e.preventDefault();
+          setTypedLength(prevLength => prevLength.slice(0, -1));
+          
+          // Si solo queda un dígito (el que acabamos de borrar), salimos del modo tecleo.
+          if (typedLength.length === 1) { 
+              setIsTypingLength(false);
+          }
+      }
       // Si el usuario presiona ESC para cancelar
       else if (e.key === 'Escape') {
           setLineStartPoint(null); // Cancela el dibujo
           setCurrentEndPoint(null);
+          setTypedLength('');
           setIsTypingLength(false);
-          if (lengthInputRef.current) lengthInputRef.current.value = '';
       }
     };
 
@@ -547,12 +557,12 @@ return (
             {/* Mensaje de tecleo de longitud (para informar al usuario) */}
             {isTypingLength && (
                 <Text
-                    text={`Escriba longitud (mm) y presione Enter: ${lengthInputRef.current?.value || ''}`}
-                    fontSize={16}
-                    fill="red"
-                    x={CANVAS_WIDTH / 2 - 150} 
-                    y={10}
-                    fontStyle="bold"
+        text={`Escriba longitud (mm) y presione Enter: ${typedLength}`} 
+        fontSize={16}
+        fill="red"
+        x={CANVAS_WIDTH / 2 - 150} 
+        y={10}
+        fontStyle="bold"
                 />
             )}
             
