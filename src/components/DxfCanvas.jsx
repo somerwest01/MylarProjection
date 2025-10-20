@@ -273,6 +273,19 @@ const handleMouseMove = useCallback((e) => {
       // Solo interesa si estamos en modo 'line' Y ya tenemos un punto de inicio
       if (drawingMode !== 'line' || !lineStartPoint) return; 
 
+      if (['0','1','2','3','4','5','6','7','8','9'].includes(e.key)) {
+          e.preventDefault(); // CRÍTICO: Evita que la tecla afecte a cualquier otro elemento
+          const newDigit = e.key;
+          
+          if (!isTypingLength) {
+              setIsTypingLength(true);
+              setTypedLength(newDigit);
+          } else {
+              setTypedLength(prevLength => prevLength + newDigit);
+          }
+          return; // Finaliza aquí si es un dígito
+      }
+
       // Si el usuario presiona Enter para confirmar la longitud
       if (e.key === 'Enter' && isTypingLength) {
         e.preventDefault(); 
@@ -280,9 +293,10 @@ const handleMouseMove = useCallback((e) => {
         
         if (isNaN(length) || length <= 0 || !currentEndPoint || !lineStartPoint) {
             console.warn("Entrada de longitud inválida o falta el punto de referencia.");
+            setLineStartPoint(null); 
+            setCurrentEndPoint(null);
             setTypedLength('');
             setIsTypingLength(false);
-            // El lineStartPoint se mantiene para un posible segundo intento de click
             return;
         }
 
@@ -296,8 +310,16 @@ const handleMouseMove = useCallback((e) => {
             x: lineStartPoint.x + length * Math.cos(angle),
             y: lineStartPoint.y + length * Math.sin(angle)
         };
+                if (isNaN(newEndPoint.x) || isNaN(newEndPoint.y)) {
+            console.error("Coordenadas de la línea no son válidas (NaN/Infinity). Cancelando.");
+            // 🚨 SOLUCIÓN: Reiniciar el estado de la línea COMPLETAMENTE
+            setLineStartPoint(null); 
+            setCurrentEndPoint(null);
+            setTypedLength('');
+            setIsTypingLength(false);
+            return;
+        }
         
-        // 3. Crear la nueva línea (con coordenadas redondeadas)
         const newLine = {
             type: 'LINE',
             start: lineStartPoint,
@@ -312,7 +334,8 @@ const handleMouseMove = useCallback((e) => {
         setIsTypingLength(false);
         
         setCurrentEndPoint(newLine.end); // La vista previa comienza desde el nuevo final
-        
+
+        return;
       } 
       // Si el usuario presiona una tecla numérica y NO está tecleando AÚN
       else if (['0','1','2','3','4','5','6','7','8','9'].includes(e.key)) {
@@ -347,7 +370,7 @@ const handleMouseMove = useCallback((e) => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
 
-}, [drawingMode, lineStartPoint, currentEndPoint, setEntities, isTypingLength]);
+}, [drawingMode, lineStartPoint, currentEndPoint, setEntities, isTypingLength, typedLength]);
   
 
   const renderInternalEntity = (blockEntity, blockIndex) => {
