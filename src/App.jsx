@@ -15,6 +15,8 @@ function App() {
   const [drawingMode, setDrawingMode] = useState('pan');
   const [importError, setImportError] = useState(false);
   const [isCanvasInitialized, setIsCanvasInitialized] = useState(false); 
+  const [isOrthoActive, setIsOrthoActive] = useState(false);
+  const [isSnapActive, setIsSnapActive] = useState(false);
 
   const handleNewDrawing = () => {
     setDxfEntities([]);
@@ -25,7 +27,39 @@ function App() {
 
     console.log('Nuevo dibujo iniciado.');
   };
+  const toggleOrtho = () => {
+  setIsOrthoActive(prev => !prev);
+  console.log('Modo ORTHO toggled.');
+};
 
+const toggleSnap = () => {
+  setIsSnapActive(prev => !prev);
+  console.log('Modo SNAP toggled.');
+};
+useEffect(() => {
+    const handleGlobalKeyDown = (e) => {
+        // Solo debe funcionar si la herramienta 'line' está activa
+        if (drawingMode !== 'line') return; 
+
+        // ORTHO - F8
+        if (e.key === 'F8') {
+            e.preventDefault();
+            toggleOrtho();
+        }
+        
+        // SNAP - F3
+        if (e.key === 'F3') {
+            e.preventDefault();
+            toggleSnap();
+        }
+    };
+
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => {
+        window.removeEventListener('keydown', handleGlobalKeyDown);
+    };
+}, [drawingMode, toggleOrtho, toggleSnap]);
+ 
   const handleDxfFileSelect = (file) => {
     setLoading(true);
     setImportError(false); // Limpiamos errores antes de intentar cargar
@@ -100,6 +134,8 @@ function App() {
           blocks={blockDefinitions}
           drawingMode={drawingMode}
           setDrawingMode={setDrawingMode}
+         isOrthoActive={isOrthoActive}
+         isSnapActive={isSnapActive}
         /> 
       </>
     );
@@ -109,7 +145,6 @@ function App() {
   return (
     <div 
       className="main-layout"
-      // Eliminamos onMouseLeave y onMouseEnter vacíos
     >      
       {/* 1. Panel Lateral Delgado (Sidebar) */}
       <Sidebar 
@@ -133,10 +168,60 @@ function App() {
           {canvasContent} 
         </div>
       </div>
+     {/* 🔑 4. BARRA DE FUNCIONES INFERIOR (Status Bar de Autocad) */}
+      <div style={{ 
+        height: '30px', 
+        backgroundColor: '#333', 
+        display: 'flex', 
+        alignItems: 'center', 
+        padding: '0 10px',
+        color: 'white',
+        fontSize: '12px',
+        flexShrink: 0 // Evita que se encoja
+      }}>
+        <span style={{ marginRight: '20px' }}>
+          Estado: {drawingMode === 'line' ? 'Dibujando Línea' : 'Pan'}
+        </span>
+        
+        {/* BOTÓN ORTHO (F8) */}
+        <button
+          onClick={toggleOrtho}
+          style={{
+            backgroundColor: isOrthoActive ? '#4CAF50' : '#555', // Verde/Gris
+            color: 'white',
+            border: 'none',
+            padding: '5px 10px',
+            marginRight: '10px',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            borderRadius: '3px'
+          }}
+        >
+          ORTHO (F8)
+        </button>
+
+        {/* BOTÓN SNAP (F3) */}
+        <button
+          onClick={toggleSnap}
+          style={{
+            backgroundColor: isSnapActive ? '#4CAF50' : '#555',
+            color: 'white',
+            border: 'none',
+            padding: '5px 10px',
+            marginRight: '10px',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            borderRadius: '3px'
+          }}
+        >
+          SNAP (F3)
+        </button>
+      </div>
     </div>
   );
 }
 
 export default App;
+
 
 
