@@ -41,6 +41,16 @@ function DxfCanvas({ entities, setEntities, blocks, drawingMode, setDrawingMode 
         y: Math.round(relativePoint.y) 
     };
 }, []); 
+
+  // 🔑 NUEVO EFECTO: Resetea el estado de dibujo cuando el modo cambia
+useEffect(() => {
+    if (drawingMode !== 'line') {
+        setLineStartPoint(null); 
+        setCurrentEndPoint(null);
+        setTypedLength(''); // Limpia cualquier dimensión tecleada
+        setIsTypingLength(false); // Sale del modo de entrada numérica
+    }
+}, [drawingMode]); 
   
   // EFECTO para centrar y escalar el dibujo al cargar
   useEffect(() => {
@@ -186,6 +196,8 @@ const handleMouseDown = useCallback((e) => {
     e.evt.preventDefault();
     const stage = stageRef.current;
     if (!stage) return;
+
+    if (isTypingLength) return; 
     
     // 🔑 LÓGICA DE DIBUJO DE LÍNEA
     if (drawingMode === 'line') {
@@ -266,9 +278,11 @@ const handleMouseMove = useCallback((e) => {
         e.preventDefault(); 
         const length = parseInt(typedLength);
         
-        if (isNaN(length) || length <= 0) {
-            setIsTypingLength(false);
+        if (isNaN(length) || length <= 0 || !currentEndPoint || !lineStartPoint) {
+            console.warn("Entrada de longitud inválida o falta el punto de referencia.");
             setTypedLength('');
+            setIsTypingLength(false);
+            // El lineStartPoint se mantiene para un posible segundo intento de click
             return;
         }
 
