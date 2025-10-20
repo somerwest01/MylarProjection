@@ -7,7 +7,7 @@ const INITIAL_SCALE = 1;
 
 const isSafeNumber = (c) => typeof c === 'number' && isFinite(c);
 
-function DxfCanvas({ entities, setEntities, blocks, drawingMode, setDrawingMode }) {
+function DxfCanvas({ entities, setEntities, blocks, drawingMode, setDrawingMode, isOrthoActive, isSnapActive }) {
   const stageRef = useRef(null);
   const [scale, setScale] = useState(INITIAL_SCALE);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
@@ -239,6 +239,42 @@ const handleMouseDown = useCallback((e) => {
     setIsDragging(false);
   }, []);
 
+const SNAP_DISTANCE = 10; // Distancia en píxeles de la pantalla para el ajuste
+
+const getSnappedPoint = useCallback((currentPoint) => {
+    if (!isSnapActive || !stageRef.current) return currentPoint;
+
+    let bestSnapPoint = currentPoint;
+    let minDistance = Infinity;
+
+    // 1. Convertir la distancia de píxeles a unidades del mundo
+    // (SNAP_DISTANCE / scale) nos da la distancia en unidades de dibujo
+    const snapThresholdWorld = SNAP_DISTANCE / scale; 
+
+    // 2. Iterar sobre los puntos clave de las entidades existentes (solo líneas por ahora)
+    entities.forEach(entity => {
+        if (entity.type === 'LINE') {
+            const snapPoints = [entity.start, entity.end];
+            
+            snapPoints.forEach(p => {
+                if (!p) return;
+                
+                const dx = p.x - currentPoint.x;
+                const dy = p.y - currentPoint.y;
+                const distanceWorld = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distanceWorld < snapThresholdWorld && distanceWorld < minDistance) {
+                    minDistance = distanceWorld;
+                    // Retornamos el punto de la entidad como el punto de ajuste
+                    bestSnapPoint = { x: p.x, y: p.y }; 
+                }
+            });
+        }
+    });
+
+    return bestSnapPoint;
+}, [isSnapActive, entities, scale]);
+
 const handleMouseMove = useCallback((e) => {
     const stage = stageRef.current;
     if (!stage) return;
@@ -260,13 +296,28 @@ const handleMouseMove = useCallback((e) => {
     
     // 🔑 LÓGICA DE VISTA PREVIA DE LÍNEA
     if (drawingMode === 'line' && lineStartPoint && !isTypingLength) {
-        const point = getRelativePoint(stage);
-        if (point) {
-            setCurrentEndPoint(point);
-        }
-    }
-}, [isDragging, lastPos, drawingMode, lineStartPoint, isTypingLength, getRelativePoint]);
+        let point = getRelativePoint(stage);
+        if (!point) return;
 
+        point = getSnappedPoint(point);
+    if (isOrthoActive) {
+            const dx = point.x - lineStartPoint.x;
+            const dy = point.y - lineStartPoint.y;
+            
+            // Si el cambio en X es mayor que en Y, fijar Y al punto de inicio.
+            if (Math.abs(dx) > Math.abs(dy)) {
+                point.y = lineStartPoint.y;
+            } 
+            // Si el cambio en Y es mayor o igual que en X, fijar X al punto de inicio.
+            else {
+                point.x = lineStartPoint.x;
+            }
+        }
+        
+        // 3. Establecer el punto final (final de la vista previa)
+        setCurrentEndPoint(point);
+    }
+}, [isDragging, lastPos, drawingMode, lineStartPoint, isTypingLength, getRelativePoint, isOrthoActive, getSnappedPoint]);
   useEffect(() => {
     // 🔑 Manejador de entrada de teclado para la longitud
     const handleKeyDown = (e) => {
