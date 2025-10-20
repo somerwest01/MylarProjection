@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from './components/Sidebar';
 import MenuPanel from './components/MenuPanel';
 import DxfCanvas from './components/DxfCanvas'; 
@@ -222,6 +222,3 @@ useEffect(() => {
 }
 
 export default App;
-
-
-
