@@ -12,7 +12,15 @@ function App() {
   const [dxfEntities, setDxfEntities] = useState(null);
   const [blockDefinitions, setBlockDefinitions] = useState({});
   const [loading, setLoading] = useState(false);
+  const [drawingMode, setDrawingMode] = useState('pan');
 
+  const handleNewDrawing = () => {
+  setDxfEntities([]);
+  setBlockDefinitions({});
+  setDrawingMode('pan'); 
+    
+  console.log('Nuevo dibujo iniciado.');
+};
 
   const handleDxfFileSelect = (file) => {
     setLoading(true);
@@ -41,7 +49,6 @@ function App() {
   };
 
   return (
-    // Creamos un área de escucha para detectar cuando el cursor sale
     <div 
       className="main-layout"
 
@@ -62,9 +69,12 @@ function App() {
 
       {/* 2. Panel Desplegable de Herramientas (MenuPanel) */}
       <MenuPanel 
-        isOpen={isMenuOpen} // Siempre abierto en este ejemplo simple
+        isOpen={isMenuOpen} 
         activeMenu={activeMenu} 
         onDxfFileSelect={handleDxfFileSelect}
+        onNewDrawing={handleNewDrawing} 
+        setDrawingMode={setDrawingMode}
+        currentDrawingMode={drawingMode}
       />
 
       {/* 3. Área de Trabajo Principal (Canvas / Diseño) */}
@@ -82,7 +92,10 @@ function App() {
               {/* ⬅️ Pasamos las entidades al componente de dibujo */}
               <DxfCanvas 
                 entities={dxfEntities}
+                setEntities={setDxfEntities}
                 blocks={blockDefinitions}
+                drawingMode={drawingMode}
+                setDrawingMode={setDrawingMode}
                 /> 
             </>
           ) : (
@@ -100,6 +113,7 @@ function App() {
 }
 
 export default App;
+
 
 
 
