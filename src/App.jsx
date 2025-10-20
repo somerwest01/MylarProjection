@@ -13,11 +13,13 @@ function App() {
   const [blockDefinitions, setBlockDefinitions] = useState({});
   const [loading, setLoading] = useState(false);
   const [drawingMode, setDrawingMode] = useState('pan');
+  const [isCleanCanvas, setIsCleanCanvas] = useState(true);
 
   const handleNewDrawing = () => {
   setDxfEntities([]);
   setBlockDefinitions({});
   setDrawingMode('pan'); 
+  setIsCleanCanvas(true);
     
   console.log('Nuevo dibujo iniciado.');
 };
@@ -35,6 +37,7 @@ function App() {
 
       setDxfEntities(extractedEntities);
       setBlockDefinitions(extractedBlocks);
+      setIsCleanCanvas(false); 
       console.log(`Dibujo analizado con ${extractedEntities.length} entidades.`);
 
       } catch (error) {
@@ -51,16 +54,11 @@ function App() {
   return (
     <div 
       className="main-layout"
-
       onMouseLeave={() => {
-
       }}
-
       onMouseEnter={() => {
-
       }}
-    >
-      
+    >      
       {/* 1. Panel Lateral Delgado (Sidebar) */}
       <Sidebar 
         activeMenu={activeMenu} 
@@ -82,7 +80,11 @@ function App() {
         <div className="canvas-container">
           {loading ? (
             <p>Cargando y analizando dibujo...</p>
-          ) : dxfEntities && dxfEntities.length > 0 ? (
+          ) : !dxfEntities || (dxfEntities.length === 0 && isCleanCanvas) ? (
+              <p>
+              Lienzo de Diseño (Importa un DXF o usa la herramienta Línea para empezar)
+              </p>
+              ) : dxfEntities && dxfEntities.length > 0 ? (
             <>
               {/* Muestra cuántas entidades se encontraron */}
               <p style={{ position: 'absolute', top: 10, left: 10, color: '#333', zIndex: 1, backgroundColor: 'white', padding: '5px' }}>
@@ -101,9 +103,7 @@ function App() {
           ) : (
             <p>
               Lienzo de Diseño (Importa un DXF para empezar) 
-              {dxfEntities && dxfEntities.length === 0 && (
-                <span style={{ color: 'red' }}><br/>¡Advertencia! No se encontraron entidades válidas (LINE, CIRCLE) en el archivo.</span>
-              )}
+              <span style={{ color: 'red' }}><br/>¡Advertencia! El DXF no contenía entidades válidas (LINE, CIRCLE, etc.).</span>
             </p>
           )}
         </div>
@@ -113,6 +113,7 @@ function App() {
 }
 
 export default App;
+
 
 
 
