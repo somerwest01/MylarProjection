@@ -42,9 +42,9 @@ function App() {
 
         setDxfEntities(extractedEntities);
         setBlockDefinitions(extractedBlocks);
-        setDrawingMode('pan'); // Vuelve a pan después de cargar
+        setDrawingMode('pan');
         
-        // Si no hay entidades válidas, establecemos el error
+    
         if (extractedEntities.length === 0) {
             setImportError(true);
         }
@@ -53,7 +53,6 @@ function App() {
 
       } catch (error) {
         console.error("Error al procesar el archivo:", error.message);
-        // Aquí puedes usar un estado para mostrar el error al usuario si no quieres usar alert()
         console.error(error.message); 
       } finally {
         setLoading(false);
@@ -139,4 +138,5 @@ function App() {
 }
 
 export default App;
+
 
