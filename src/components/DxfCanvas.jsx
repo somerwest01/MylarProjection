@@ -202,8 +202,10 @@ const handleMouseDown = useCallback((e) => {
     
     // 🔑 LÓGICA DE DIBUJO DE LÍNEA
     if (drawingMode === 'line') {
-      const clickedPoint = getRelativePoint(stage);
+      let clickedPoint = getRelativePoint(stage);
       if (!clickedPoint) return;
+
+      clickedPoint = getSnappedPoint(clickedPoint);
 
       if (!lineStartPoint) {
         // Primer clic: Iniciar la línea
@@ -239,7 +241,7 @@ const handleMouseDown = useCallback((e) => {
       setIsDragging(true);
       setLastPos({ x: e.evt.clientX, y: e.evt.clientY });
     }
-}, [drawingMode, lineStartPoint, currentEndPoint, getRelativePoint, setEntities, isTypingLength]);
+}, [drawingMode, lineStartPoint, currentEndPoint, getRelativePoint, setEntities, isTypingLength, lineColor, getSnappedPoint]);
   
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
@@ -382,7 +384,7 @@ const handleMouseMove = useCallback((e) => {
             type: 'LINE',
             start: lineStartPoint,
             end: { x: Math.round(newEndPoint.x), y: Math.round(newEndPoint.y) },
-            color: 'green' 
+            color: lineColor
         };
         
         // 4. Agregar la línea, establecer el nuevo inicio y salir del modo tecleo
@@ -428,7 +430,7 @@ const handleMouseMove = useCallback((e) => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
 
-}, [drawingMode, lineStartPoint, currentEndPoint, setEntities, isTypingLength, typedLength]);
+}, [drawingMode, lineStartPoint, currentEndPoint, setEntities, isTypingLength, typedLength, lineColor]);
   
 
   const renderInternalEntity = (blockEntity, blockIndex) => {
