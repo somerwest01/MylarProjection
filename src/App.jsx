@@ -17,6 +17,7 @@ function App() {
   const [isCanvasInitialized, setIsCanvasInitialized] = useState(false); 
   const [isOrthoActive, setIsOrthoActive] = useState(false);
   const [isSnapActive, setIsSnapActive] = useState(false);
+  const [lineColor, setLineColor] = useState('#000000');
 
   const handleNewDrawing = () => {
     setDxfEntities([]);
@@ -136,6 +137,7 @@ useEffect(() => {
           setDrawingMode={setDrawingMode}
          isOrthoActive={isOrthoActive}
          isSnapActive={isSnapActive}
+         lineColor={lineColor}
         /> 
       </>
     );
@@ -160,6 +162,8 @@ useEffect(() => {
         onNewDrawing={handleNewDrawing} 
         setDrawingMode={setDrawingMode}
         currentDrawingMode={drawingMode}
+        lineColor={lineColor}
+        setLineColor={setLineColor}
       />
       
       {/* 🔑 NUEVO CONTENEDOR PRINCIPAL: Apila Canvas (se expande) y Barra de Estado (fija) */}
@@ -228,3 +232,4 @@ useEffect(() => {
 }
 
 export default App;
+
