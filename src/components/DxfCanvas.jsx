@@ -7,7 +7,7 @@ const INITIAL_SCALE = 1;
 
 const isSafeNumber = (c) => typeof c === 'number' && isFinite(c);
 
-function DxfCanvas({ entities, setEntities, blocks, drawingMode, setDrawingMode, isOrthoActive, isSnapActive }) {
+function DxfCanvas({ entities, setEntities, blocks, drawingMode, setDrawingMode, isOrthoActive, isSnapActive, lineColor }) {
   const stageRef = useRef(null);
   const [scale, setScale] = useState(INITIAL_SCALE);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
@@ -221,7 +221,7 @@ const handleMouseDown = useCallback((e) => {
           type: 'LINE',
           start: lineStartPoint,
           end: finalPoint, // ✅ Usar el punto ajustado por SNAP/ORTHO
-          color: 'green' 
+          color: lineColor
         };
         
         // Agregar la nueva línea
@@ -618,7 +618,7 @@ return (
             {drawingMode === 'line' && lineStartPoint && currentEndPoint && (
                 <Line
                     points={[lineStartPoint.x, lineStartPoint.y, currentEndPoint.x, currentEndPoint.y]}
-                    stroke="gray"
+                    stroke={lineColor}
                     strokeWidth={1 / scale} // Se mantiene delgado sin importar el zoom
                     dash={[10 / scale, 5 / scale]} 
                 />
