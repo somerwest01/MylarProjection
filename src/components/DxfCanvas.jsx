@@ -53,16 +53,19 @@ useEffect(() => {
 }, [drawingMode]); 
   
   // EFECTO para centrar y escalar el dibujo al cargar
-  useEffect(() => {
-    if (!entities || entities.length === 0) 
+useEffect(() => {
+    
+    // 🔑 CORRECCIÓN DE SINTAXIS: Usamos corchetes {} y el 'return' está dentro del bloque 'if'
+    if (!entities || entities.length === 0) { 
       if (initialView) { 
             setScale(initialView.scale);
             setOffset(initialView.offset);
             setDebugInfo(`View Initialized: Scale: ${initialView.scale}, Offset: (${initialView.offset.x}, ${initialView.offset.y})`);
         } 
-      return;
+      return; // Salir de la función si no hay entidades que calcular
     } 
 
+    // --- LÓGICA DE CÁLCULO DE BOUNDING BOX (Solo si hay entidades) ---
     let minX = Infinity, minY = Infinity;
     let maxX = -Infinity, maxY = -Infinity;
     
@@ -149,17 +152,15 @@ useEffect(() => {
       const scaleY = (CANVAS_HEIGHT - padding) / drawingHeight;
       newScale = Math.min(scaleX, scaleY);
       
-      // ... (cálculo de centerX/centerY y offsetX/offsetY) ...
       const centerX = minX + drawingWidth / 2;
       const centerY = minY + drawingHeight / 2;
 
       offsetX = (CANVAS_WIDTH / 2) - (centerX * newScale);
       offsetY = (CANVAS_HEIGHT / 2) - (centerY * (-newScale));
     } else {
-      // ⚠️ SOLUCIÓN DE FALLO: Si los límites son inválidos (Infinity/NaN), reseteamos la vista.
-      // Esto evita que Konva reciba un valor NaN en su Layer.x o Layer.y.
-      newScale = 0.0000001; // Forzamos una escala mínima (para que intente dibujar, aunque muy pequeño)
-      offsetX = CANVAS_WIDTH / 2; // Lo centramos en el medio del lienzo.
+      // ⚠️ SOLUCIÓN DE FALLO: Si los límites son inválidos, forzamos escala mínima.
+      newScale = 0.0000001; 
+      offsetX = CANVAS_WIDTH / 2; 
       offsetY = CANVAS_HEIGHT / 2;
       console.warn("ADVERTENCIA CRÍTICA: Límites del DXF inválidos o demasiado grandes. Forzando una escala mínima y centrado. Use el zoom para encontrar el dibujo.");
     }
@@ -170,11 +171,10 @@ useEffect(() => {
     console.log(`OffsetY calculado: ${offsetY}`);
     console.log(`Posición Y FINAL aplicada: ${offsetY + CANVAS_HEIGHT}`);
     
-    // ... (resto del useEffect: setScale, setOffset, setDebugInfo)
     setScale(newScale);
     setOffset({ x: offsetX, y: offsetY });
     setDebugInfo(`Scale: ${newScale.toFixed(8)}, Offset: (${offsetX.toFixed(0)}, ${offsetY.toFixed(0)})`);
-  }, [entities, initialView]); 
+}, [entities, initialView]); // Dependencias correctas
 
     const handleWheel = (e) => {
     e.evt.preventDefault();
