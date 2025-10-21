@@ -104,7 +104,6 @@ useEffect(() => {
     canvasContent = (
       <p style={{ textAlign: 'center' }}>
         ¡Bienvenido!<br/>
-        Selecciona **"➕ Nuevo Dibujo"** o **"Importar DXF"** para comenzar a diseñar.
       </p>
     );
   } else if (loading) {
@@ -162,15 +161,10 @@ useEffect(() => {
         onNewDrawing={handleNewDrawing} 
         setDrawingMode={setDrawingMode}
         currentDrawingMode={drawingMode}
-        lineColor={lineColor}
-        setLineColor={setLineColor}
       />
       
       {/* 🔑 NUEVO CONTENEDOR PRINCIPAL: Apila Canvas (se expande) y Barra de Estado (fija) */}
       <div style={{ display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
-
-        {/* 3. Área de Trabajo Principal (Canvas / Diseño) */}
-        {/* CRÍTICO: flexGrow: 1 hace que este div tome todo el espacio vertical sobrante. */}
         <div className="work-area" style={{ flexGrow: 1 }}> 
           <div className="canvas-container">
             {canvasContent} 
@@ -186,8 +180,28 @@ useEffect(() => {
           padding: '0 10px',
           color: 'white',
           fontSize: '12px',
-          flexShrink: 0 // Este estilo ya estaba bien, asegura que no se encoja.
+          flexShrink: 0
         }}>
+{/* Mostramos primero el selector de color */}
+          <span style={{ marginRight: '10px' }}>Color:</span>
+          {/* 🔑 SELECTOR DE COLOR EN BARRA DE ESTADO */}
+          <input
+            type="color"
+            value={lineColor}
+            onChange={(e) => setLineColor(e.target.value)}
+            style={{
+              width: '24px', 
+              height: '24px',
+              padding: '0', 
+              border: '1px solid white', 
+              borderRadius: '4px',
+              marginRight: '20px', // Espacio después del selector
+              cursor: 'pointer',
+              boxSizing: 'content-box',
+              // Aseguramos que el fondo del input color sea transparente
+              backgroundColor: 'transparent',
+            }}
+          />
           <span style={{ marginRight: '20px' }}>
             Estado: {drawingMode === 'line' ? 'Dibujando Línea' : 'Pan'}
           </span>
@@ -232,4 +246,5 @@ useEffect(() => {
 }
 
 export default App;
+
 
