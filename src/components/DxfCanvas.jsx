@@ -205,6 +205,8 @@ const handleMouseDown = useCallback((e) => {
       const clickedPoint = getRelativePoint(stage);
       if (!clickedPoint) return;
 
+      clickedPoint = getSnappedPoint(clickedPoint);
+
       if (!lineStartPoint) {
         // Primer clic: Iniciar la línea
         setLineStartPoint(clickedPoint);
@@ -239,7 +241,7 @@ const handleMouseDown = useCallback((e) => {
       setIsDragging(true);
       setLastPos({ x: e.evt.clientX, y: e.evt.clientY });
     }
-}, [drawingMode, lineStartPoint, currentEndPoint, getRelativePoint, setEntities, isTypingLength]);
+}, [drawingMode, lineStartPoint, currentEndPoint, getRelativePoint, setEntities, isTypingLength, lineColor, getSnappedPoint]);
   
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
