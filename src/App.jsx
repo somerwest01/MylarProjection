@@ -161,61 +161,67 @@ useEffect(() => {
         setDrawingMode={setDrawingMode}
         currentDrawingMode={drawingMode}
       />
+      
+      {/* 🔑 NUEVO CONTENEDOR PRINCIPAL: Apila Canvas (se expande) y Barra de Estado (fija) */}
+      <div style={{ display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
 
-      {/* 3. Área de Trabajo Principal (Canvas / Diseño) */}
-      <div className="work-area">
-        <div className="canvas-container">
-          {canvasContent} 
+        {/* 3. Área de Trabajo Principal (Canvas / Diseño) */}
+        {/* CRÍTICO: flexGrow: 1 hace que este div tome todo el espacio vertical sobrante. */}
+        <div className="work-area" style={{ flexGrow: 1 }}> 
+          <div className="canvas-container">
+            {canvasContent} 
+          </div>
         </div>
-      </div>
-     {/* 🔑 4. BARRA DE FUNCIONES INFERIOR (Status Bar de Autocad) */}
-      <div style={{ 
-        height: '30px', 
-        backgroundColor: '#333', 
-        display: 'flex', 
-        alignItems: 'center', 
-        padding: '0 10px',
-        color: 'white',
-        fontSize: '12px',
-        flexShrink: 0 // Evita que se encoja
-      }}>
-        <span style={{ marginRight: '20px' }}>
-          Estado: {drawingMode === 'line' ? 'Dibujando Línea' : 'Pan'}
-        </span>
-        
-        {/* BOTÓN ORTHO (F8) */}
-        <button
-          onClick={toggleOrtho}
-          style={{
-            backgroundColor: isOrthoActive ? '#4CAF50' : '#555', // Verde/Gris
-            color: 'white',
-            border: 'none',
-            padding: '5px 10px',
-            marginRight: '10px',
-            cursor: 'pointer',
-            fontWeight: 'bold',
-            borderRadius: '3px'
-          }}
-        >
-          ORTHO (F8)
-        </button>
 
-        {/* BOTÓN SNAP (F3) */}
-        <button
-          onClick={toggleSnap}
-          style={{
-            backgroundColor: isSnapActive ? '#4CAF50' : '#555',
-            color: 'white',
-            border: 'none',
-            padding: '5px 10px',
-            marginRight: '10px',
-            cursor: 'pointer',
-            fontWeight: 'bold',
-            borderRadius: '3px'
-          }}
-        >
-          SNAP (F3)
-        </button>
+        {/* 🔑 4. BARRA DE FUNCIONES INFERIOR (Status Bar de Autocad) */}
+        <div style={{ 
+          height: '30px', 
+          backgroundColor: '#333', 
+          display: 'flex', 
+          alignItems: 'center', 
+          padding: '0 10px',
+          color: 'white',
+          fontSize: '12px',
+          flexShrink: 0 // Este estilo ya estaba bien, asegura que no se encoja.
+        }}>
+          <span style={{ marginRight: '20px' }}>
+            Estado: {drawingMode === 'line' ? 'Dibujando Línea' : 'Pan'}
+          </span>
+          
+          {/* BOTÓN ORTHO (F8) */}
+          <button
+            onClick={toggleOrtho}
+            style={{
+              backgroundColor: isOrthoActive ? '#4CAF50' : '#555', // Verde/Gris
+              color: 'white',
+              border: 'none',
+              padding: '5px 10px',
+              marginRight: '10px',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              borderRadius: '3px'
+            }}
+          >
+            ORTHO (F8)
+          </button>
+
+          {/* BOTÓN SNAP (F3) */}
+          <button
+            onClick={toggleSnap}
+            style={{
+              backgroundColor: isSnapActive ? '#4CAF50' : '#555',
+              color: 'white',
+              border: 'none',
+              padding: '5px 10px',
+              marginRight: '10px',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              borderRadius: '3px'
+            }}
+          >
+            SNAP (F3)
+          </button>
+        </div>
       </div>
     </div>
   );
