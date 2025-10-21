@@ -7,7 +7,7 @@ const INITIAL_SCALE = 1;
 
 const isSafeNumber = (c) => typeof c === 'number' && isFinite(c);
 
-function DxfCanvas({ entities, setEntities, blocks, drawingMode, setDrawingMode, isOrthoActive, isSnapActive, lineColor }) {
+function DxfCanvas({ entities, setEntities, blocks, drawingMode, setDrawingMode, isOrthoActive, isSnapActive, lineColor, initialView }) {
   const stageRef = useRef(null);
   const [scale, setScale] = useState(INITIAL_SCALE);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
@@ -54,7 +54,14 @@ useEffect(() => {
   
   // EFECTO para centrar y escalar el dibujo al cargar
   useEffect(() => {
-    if (!entities || entities.length === 0) return;
+    if (!entities || entities.length === 0) 
+      if (initialView) { 
+            setScale(initialView.scale);
+            setOffset(initialView.offset);
+            setDebugInfo(`View Initialized: Scale: ${initialView.scale}, Offset: (${initialView.offset.x}, ${initialView.offset.y})`);
+        } 
+      return;
+    } 
 
     let minX = Infinity, minY = Infinity;
     let maxX = -Infinity, maxY = -Infinity;
@@ -167,7 +174,7 @@ useEffect(() => {
     setScale(newScale);
     setOffset({ x: offsetX, y: offsetY });
     setDebugInfo(`Scale: ${newScale.toFixed(8)}, Offset: (${offsetX.toFixed(0)}, ${offsetY.toFixed(0)})`);
-  }, []); 
+  }, [entities, initialView]); 
 
     const handleWheel = (e) => {
     e.evt.preventDefault();
