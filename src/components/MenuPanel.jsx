@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 
 // MenuPanel es el panel que se despliega (la "caja" de herramientas)
-function MenuPanel({ isOpen, activeMenu, onDxfFileSelect, onNewDrawing, setDrawingMode, currentDrawingMode, lineColor, setLineColor }) {
+function MenuPanel({ isOpen, activeMenu, onDxfFileSelect, onNewDrawing, setDrawingMode, currentDrawingMode }) {
   const panelClass = isOpen ? 'open' : '';
   const fileInputRef = useRef(null);
 
@@ -37,76 +37,45 @@ function MenuPanel({ isOpen, activeMenu, onDxfFileSelect, onNewDrawing, setDrawi
         </button>
 
         <hr style={{ margin: '15px 0' }} />
-        <h4>Herramientas de Dibujo (Modo: {currentDrawingMode})</h4>
-          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
-           {/* 🔑 SELECTOR DE COLOR */}
-        <label style={{ marginRight: '10px', fontWeight: 'bold' }}>
-          Color Línea:
-        </label>
-        <input
-          type="color"
-          value={lineColor}
-          onChange={(e) => setLineColor(e.target.value)}
-          style={{ width: '40px', height: '30px', border: 'none', cursor: 'pointer' }}
-        />
-        <span style={{ marginLeft: '10px', color: lineColor, fontWeight: 'bold' }}>
-        {lineColor}
-    </span>
-</div>
-
-{/* BOTÓN LÍNEA */}
-<button 
-    onClick={() => setDrawingMode(currentDrawingMode === 'line' ? 'pan' : 'line')}
-    // ... (restos de estilos del botón Línea)
->
-    📏 Línea
-</button>
-        
-        {/* Sección de IMPORTACIÓN (existente) */}
-        <input 
-          type="file" 
-          ref={fileInputRef} 
-          accept=".dxf" 
-          onChange={handleFileChange} 
-          style={{ display: 'none' }}
-        />
-        <button 
+{/* Sección de IMPORTACIÓN */}
+        <h4>Importar</h4>
+        <button
           onClick={() => fileInputRef.current.click()}
-          style={{ 
-            padding: '10px 15px', 
+          style={{
+            padding: '10px 15px',
             backgroundColor: '#3b82f6', 
-            color: 'white', 
-            border: 'none', 
+            color: 'white',
+            border: 'none',
             borderRadius: '4px',
             cursor: 'pointer',
             width: '100%'
           }}
         >
-          <i className="fa-solid fa-file-import" style={{ marginRight: '5px' }}></i>
-          Importar DXF
+          📤 Importar DXF
         </button>
-      </div>
-    );
-  }else if (activeMenu === 'elements') {
-    title = 'Elementos';
-    content = (
-      <div>
-        <h4 style={{ marginBottom: '10px' }}>Herramientas de Dibujo (Modo: {currentDrawingMode})</h4>
+        <input 
+          type="file" 
+          ref={fileInputRef} 
+          onChange={handleFileChange} 
+          style={{ display: 'none' }} 
+          accept=".dxf"
+        />
+{/* Sección de Herramientas de Edición */}
+        <hr style={{ margin: '15px 0' }} />
+        <h4>Herramientas de Dibujo (Modo: {currentDrawingMode})</h4>
         
-        {/* BOTÓN LÍNEA */}
-        <button 
-          onClick={() => setDrawingMode(currentDrawingMode === 'line' ? 'pan' : 'line')}
-          style={{ 
+{/* BOTÓN LÍNEA */}
+<button 
+    onClick={() => setDrawingMode(currentDrawingMode === 'line' ? 'pan' : 'line')}
+        style={{ 
             padding: '8px', 
             marginRight: '10px',
-            // Resaltamos si la herramienta 'line' está activa
             backgroundColor: currentDrawingMode === 'line' ? '#a5f3fc' : 'white', 
             border: currentDrawingMode === 'line' ? '2px solid #06b6d4' : '1px solid #ccc' 
           }}
         >
-          📏 Línea
-        </button>
-
+    📏 Línea
+</button>
         {/* BOTÓN PAN (Por si el usuario quiere volver a mover la vista) */}
         <button 
           onClick={() => setDrawingMode('pan')}
@@ -117,7 +86,7 @@ function MenuPanel({ isOpen, activeMenu, onDxfFileSelect, onNewDrawing, setDrawi
             border: currentDrawingMode === 'pan' ? '2px solid #6b7280' : '1px solid #ccc' 
           }}
         >
-          ✋ Mover Vista (Pan)
+          ✋ Mover dibujo (Pan)
         </button>
         
         <hr style={{ margin: '15px 0' }} />
@@ -127,12 +96,24 @@ function MenuPanel({ isOpen, activeMenu, onDxfFileSelect, onNewDrawing, setDrawi
         <button disabled>Cuadrado</button>
       </div>
     );
+  }else if (activeMenu === 'elements') {
+    title = 'Elementos';
+    content = (
+      <div>
+        <p>Esta sección mostrará los elementos existentes en el dibujo.</p>
+        <button disabled>Seleccionar Todo</button>
+      </div>
+    );
+  } else {
+    title = 'Menú Desconocido';
+    content = <p>Selecciona una opción del panel lateral.</p>;
   }
 
   return (
-    <div className={`menu-panel-container ${panelClass}`}>
+<div className={`menu-panel-container ${panelClass}`}>
       <div className="menu-content">
         <h2>{title}</h2>
+        <div style={{ minHeight: '10px' }}></div>
         {content}
       </div>
     </div>
@@ -140,6 +121,7 @@ function MenuPanel({ isOpen, activeMenu, onDxfFileSelect, onNewDrawing, setDrawi
 }
 
 export default MenuPanel;
+
 
 
 
