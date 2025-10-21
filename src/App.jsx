@@ -18,6 +18,7 @@ function App() {
   const [isOrthoActive, setIsOrthoActive] = useState(false);
   const [isSnapActive, setIsSnapActive] = useState(false);
   const [lineColor, setLineColor] = useState('#000000');
+  const [initialView, setInitialView] = useState(null);
 
   const handleNewDrawing = () => {
     setDxfEntities([]);
@@ -25,6 +26,11 @@ function App() {
     setDrawingMode('pan'); 
     setImportError(false);
     setIsCanvasInitialized(true); 
+
+   setInitialView({
+        scale: 1, 
+        offset: { x: 500, y: 300 } // Centra el 0,0 en el lienzo de 1000x600
+    });
 
     console.log('Nuevo dibujo iniciado.');
   };
@@ -137,6 +143,7 @@ useEffect(() => {
          isOrthoActive={isOrthoActive}
          isSnapActive={isSnapActive}
          lineColor={lineColor}
+         initialView={initialView}
         /> 
       </>
     );
@@ -246,5 +253,6 @@ useEffect(() => {
 }
 
 export default App;
+
 
 
