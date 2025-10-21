@@ -62,7 +62,7 @@ function MenuPanel({ isOpen, activeMenu, onDxfFileSelect, onNewDrawing, setDrawi
         />
 {/* Sección de Herramientas de Edición */}
         <hr style={{ margin: '15px 0' }} />
-        <h4>Herramientas de Dibujo (Modo: {currentDrawingMode})</h4>
+        <h4>Herramientas de Dibujo</h4>
         
 {/* BOTÓN LÍNEA */}
 <button 
@@ -121,6 +121,7 @@ function MenuPanel({ isOpen, activeMenu, onDxfFileSelect, onNewDrawing, setDrawi
 }
 
 export default MenuPanel;
+
 
 
 
