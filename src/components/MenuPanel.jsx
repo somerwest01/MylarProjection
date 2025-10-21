@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 
 // MenuPanel es el panel que se despliega (la "caja" de herramientas)
-function MenuPanel({ isOpen, activeMenu, onDxfFileSelect, onNewDrawing, setDrawingMode, currentDrawingMode }) {
+function MenuPanel({ isOpen, activeMenu, onDxfFileSelect, onNewDrawing, setDrawingMode, currentDrawingMode, lineColor, setLineColor }) {
   const panelClass = isOpen ? 'open' : '';
   const fileInputRef = useRef(null);
 
@@ -37,7 +37,31 @@ function MenuPanel({ isOpen, activeMenu, onDxfFileSelect, onNewDrawing, setDrawi
         </button>
 
         <hr style={{ margin: '15px 0' }} />
+        <h4>Herramientas de Dibujo (Modo: {currentDrawingMode})</h4>
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+           {/* 🔑 SELECTOR DE COLOR */}
+        <label style={{ marginRight: '10px', fontWeight: 'bold' }}>
+          Color Línea:
+        </label>
+        <input
+          type="color"
+          value={lineColor}
+          onChange={(e) => setLineColor(e.target.value)}
+          style={{ width: '40px', height: '30px', border: 'none', cursor: 'pointer' }}
+        />
+        <span style={{ marginLeft: '10px', color: lineColor, fontWeight: 'bold' }}>
+        {lineColor}
+    </span>
+</div>
 
+{/* BOTÓN LÍNEA */}
+<button 
+    onClick={() => setDrawingMode(currentDrawingMode === 'line' ? 'pan' : 'line')}
+    // ... (restos de estilos del botón Línea)
+>
+    📏 Línea
+</button>
+        
         {/* Sección de IMPORTACIÓN (existente) */}
         <input 
           type="file" 
@@ -116,5 +140,6 @@ function MenuPanel({ isOpen, activeMenu, onDxfFileSelect, onNewDrawing, setDrawi
 }
 
 export default MenuPanel;
+
 
 
