@@ -761,7 +761,6 @@ return (
 )}
 
 {/* Debes añadir el componente ContextMenuButton para que funcione */}
-<ContextMenuButton />
         </Layer>
     </Stage>
 );
