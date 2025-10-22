@@ -659,7 +659,18 @@ return (
       onMouseUp={handleMouseUp} 
       onMouseMove={handleMouseMove}
       onContextMenu={handleContextMenu}
-      style={{ border: '1px solid #ddd', cursor: isDragging ? 'grabbing' : (drawingMode === 'line' ? 'crosshair' : 'grab') }} // ✨ Añadir cursor 'crosshair'
+        style={{ 
+          border: '1px solid #ddd', 
+          cursor: isDragging 
+              ? 'grabbing' 
+              : (drawingMode === 'line' 
+                  ? 'crosshair' 
+                  : (drawingMode === 'pan' 
+                      ? 'grab' 
+                      : 'pointer' 
+                  )
+              ) 
+      }}
     >
         {/* 1. CAPA PRINCIPAL DE DIBUJO (CON ESCALA Y OFFSET) */}
         <Layer
