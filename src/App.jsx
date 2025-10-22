@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+lectimport React, { useState, useEffect } from 'react';
 import Sidebar from './components/Sidebar';
 import MenuPanel from './components/MenuPanel';
 import DxfCanvas from './components/DxfCanvas'; 
@@ -12,7 +12,7 @@ function App() {
   const [dxfEntities, setDxfEntities] = useState([]);
   const [blockDefinitions, setBlockDefinitions] = useState({});
   const [loading, setLoading] = useState(false);
-  const [drawingMode, setDrawingMode] = useState('pan');
+  const [drawingMode, setDrawingMode] = useState('select');
   const [importError, setImportError] = useState(false);
   const [isCanvasInitialized, setIsCanvasInitialized] = useState(false); 
   const [isOrthoActive, setIsOrthoActive] = useState(false);
@@ -263,5 +263,6 @@ useEffect(() => {
 }
 
 export default App;
+
 
 
