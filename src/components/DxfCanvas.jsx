@@ -522,10 +522,8 @@ const handleMouseMove = useCallback((e) => {
             console.error(`Línea ${index} omitida (Error de coordenadas no finitas):`, linePoints);
             return null;
         } 
-        const actualLineStrokeWidth = entity.thickness 
-                                  ? entity.thickness / scale 
-                                  : 1 / scale; // Usar el valor anterior (1/scale) si no tiene grosor
-        
+        const entityThickness = entity.thickness || 1;
+        const actualLineStrokeWidth = entityThickness / scale;   
         return (
           <Line
             key={index}
