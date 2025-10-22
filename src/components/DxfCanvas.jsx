@@ -40,7 +40,7 @@ function DxfCanvas({ entities, setEntities, blocks, drawingMode, setDrawingMode,
         x: Math.round(relativePoint.x), 
         y: Math.round(relativePoint.y) 
     };
-}, []); 
+}, [scale, offset]); 
 
   // 🔑 NUEVO EFECTO: Resetea el estado de dibujo cuando el modo cambia
 useEffect(() => {
