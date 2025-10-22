@@ -221,7 +221,8 @@ const handleMouseDown = useCallback((e) => {
           type: 'LINE',
           start: lineStartPoint,
           end: finalPoint, // ✅ Usar el punto ajustado por SNAP/ORTHO
-          color: lineColor
+          color: lineColor,
+          thickness: lineThicknessMm
         };
         
         // Agregar la nueva línea
