@@ -76,18 +76,6 @@ function MenuPanel({ isOpen, activeMenu, onDxfFileSelect, onNewDrawing, setDrawi
         >
     📏 Línea
 </button>
-        {/* BOTÓN PAN (Por si el usuario quiere volver a mover la vista) */}
-        <button 
-          onClick={() => setDrawingMode('pan')}
-          style={{ 
-            padding: '8px', 
-            // Resaltamos si la herramienta 'pan' está activa
-            backgroundColor: currentDrawingMode === 'pan' ? '#e5e7eb' : 'white',
-            border: currentDrawingMode === 'pan' ? '2px solid #6b7280' : '1px solid #ccc' 
-          }}
-        >
-          ✋ Mover dibujo (Pan)
-        </button>
         
         <hr style={{ margin: '15px 0' }} />
 
@@ -121,6 +109,7 @@ function MenuPanel({ isOpen, activeMenu, onDxfFileSelect, onNewDrawing, setDrawi
 }
 
 export default MenuPanel;
+
 
 
 
