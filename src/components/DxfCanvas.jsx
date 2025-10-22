@@ -480,7 +480,7 @@ const handleMouseMove = useCallback((e) => {
     if (!entity || !entity.type) return null;
     
     const strokeColor = entity.color || 'black';
-    const strokeWidth = 1 / scale;
+    // const strokeWidth = 1 / scale;
 
     switch (entity.type) {
             case 'MTEXT':
@@ -521,13 +521,17 @@ const handleMouseMove = useCallback((e) => {
         if (!allLineCoordsValid) {
             console.error(`Línea ${index} omitida (Error de coordenadas no finitas):`, linePoints);
             return null;
-        }  
+        } 
+        const actualLineStrokeWidth = entity.thickness 
+                                  ? entity.thickness / scale 
+                                  : 1 / scale; // Usar el valor anterior (1/scale) si no tiene grosor
+        
         return (
           <Line
             key={index}
             points={linePoints}
             stroke={strokeColor}
-            strokeWidth={strokeWidth}
+            strokeWidth={actualLineStrokeWidth}
           />
         );      
       case 'CIRCLE':
@@ -620,7 +624,7 @@ return (
                 <Line
                     points={[lineStartPoint.x, lineStartPoint.y, currentEndPoint.x, currentEndPoint.y]}
                     stroke={lineColor}
-                    strokeWidth={1 / scale} // Se mantiene delgado sin importar el zoom
+                    strokeWidth={lineThicknessMm / scale} // Se mantiene delgado sin importar el zoom
                     dash={[10 / scale, 5 / scale]} 
                 />
             )}
