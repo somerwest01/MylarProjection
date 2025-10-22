@@ -722,7 +722,6 @@ return (
                 x={10} 
                 y={CANVAS_HEIGHT - 30} 
             />
-
         </Layer>
     </Stage>
               {/* Menú Contextual Flotante */}
@@ -762,8 +761,7 @@ return (
         />
     </div>
 )}
-
-{/* Debes añadir el componente ContextMenuButton para que funcione */}
+  </>  
 );
 }
 
