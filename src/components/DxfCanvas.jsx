@@ -206,21 +206,21 @@ const handleMouseDown = useCallback((e) => {
       if (!clickedPoint) return;
 
       if (!lineStartPoint) {
-        // Primer clic: Iniciar la línea
-        setLineStartPoint(clickedPoint);
-        setCurrentEndPoint(clickedPoint); // El punto final provisional es el inicio
+      let snappedStartPoint = clickedPoint;
+        if (isSnapActive) {
+            snappedStartPoint = getSnappedPoint(clickedPoint); 
+        }
+        
+        setLineStartPoint(snappedStartPoint);
+        setCurrentEndPoint(snappedStartPoint);// El punto final provisional es el inicio
         
       } else {
-        // Segundo clic: Terminar la línea
-        
-        // 🔑 CRÍTICO: Usar currentEndPoint, que ya ha sido modificado por SNAP/ORTHO
-        // Si por alguna razón currentEndPoint es null, usamos el punto del clic
         const finalPoint = currentEndPoint || clickedPoint; 
         
         const newLine = {
           type: 'LINE',
           start: lineStartPoint,
-          end: finalPoint, // ✅ Usar el punto ajustado por SNAP/ORTHO
+          end: finalPoint,
           color: lineColor,
           thickness: lineThicknessMm
         };
