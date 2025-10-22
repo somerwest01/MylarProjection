@@ -649,6 +649,7 @@ const handleMouseMove = useCallback((e) => {
   };
 
 return (
+    <>
     <Stage
       ref={stageRef}
       width={CANVAS_WIDTH}
