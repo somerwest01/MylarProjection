@@ -205,7 +205,12 @@ useEffect(() => {
             }}
           />
           <span style={{ marginRight: '20px' }}>
-            Estado: {drawingMode === 'line' ? 'Dibujando Línea' : 'Pan'}
+          Estado: {
+              drawingMode === 'line' ? 'Dibujando Línea' : 
+              drawingMode === 'pan' ? 'Mover (Pan)' :
+              drawingMode === 'select' ? 'Selección' :
+              'Inactivo'
+            }
           </span>
          <span style={{ marginRight: '10px' }}>Grosor (mm):</span>
 <input
@@ -263,6 +268,7 @@ useEffect(() => {
 }
 
 export default App;
+
 
 
 
