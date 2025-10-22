@@ -55,21 +55,22 @@ useEffect(() => {
   // EFECTO para centrar y escalar el dibujo al cargar
 useEffect(() => {
     
-    // 🔑 CORRECCIÓN DE SINTAXIS: Usamos corchetes {} y el 'return' está dentro del bloque 'if'
-    if (!entities || entities.length === 0) { 
-      if (initialView) { 
+    // 🔑 CORRECCIÓN CRÍTICA: Lógica para lienzo vacío (Nuevo Dibujo)
+    if (!entities || entities.length === 0) {
+        if (initialView) { 
+            // Aplicar la vista inicial si se proporciona (desde "Nuevo Dibujo")
             setScale(initialView.scale);
             setOffset(initialView.offset);
             setDebugInfo(`View Initialized: Scale: ${initialView.scale}, Offset: (${initialView.offset.x}, ${initialView.offset.y})`);
-        } 
-      return; // Salir de la función si no hay entidades que calcular
+        }
+        return; // Salir y evitar el cálculo de límites infinitos
     } 
 
     // --- LÓGICA DE CÁLCULO DE BOUNDING BOX (Solo si hay entidades) ---
     let minX = Infinity, minY = Infinity;
     let maxX = -Infinity, maxY = -Infinity;
     
-    const SAFE_LIMIT = 1e9; // 1 billón (1,000,000,000)
+    const SAFE_LIMIT = 1e9;
     const isValidCoord = (c) => typeof c === 'number' && isFinite(c) && Math.abs(c) < SAFE_LIMIT;
 
     entities.forEach(entity => {
@@ -94,7 +95,6 @@ useEffect(() => {
           maxY = Math.max(maxY, entity.center.y + entity.radius);
         }
       } else if (entity.type === 'POLYLINE_GEOM' && entity.points) {
-          // Iterar sobre los puntos de la polilínea
           for(let i = 0; i < entity.points.length; i += 2) {
               const x = entity.points[i];
               const y = entity.points[i+1];
@@ -109,7 +109,6 @@ useEffect(() => {
               }
           }
       } else if (entity.type === 'MTEXT') {
-        // En dxf-importer.js, el MTEXT se exporta con entity.x y entity.y
         const x = entity.x; 
         const y = entity.y;
 
@@ -146,7 +145,6 @@ useEffect(() => {
     const isLimitsValid = minX !== Infinity && maxX !== -Infinity && drawingWidth > 0 && drawingHeight > 0;
     
     if (isLimitsValid) {
-      // Si los límites son válidos, calculamos la escala y el offset normal
       const padding = 50;
       const scaleX = (CANVAS_WIDTH - padding) / drawingWidth;
       const scaleY = (CANVAS_HEIGHT - padding) / drawingHeight;
@@ -158,22 +156,16 @@ useEffect(() => {
       offsetX = (CANVAS_WIDTH / 2) - (centerX * newScale);
       offsetY = (CANVAS_HEIGHT / 2) - (centerY * (-newScale));
     } else {
-      // ⚠️ SOLUCIÓN DE FALLO: Si los límites son inválidos, forzamos escala mínima.
       newScale = 0.0000001; 
       offsetX = CANVAS_WIDTH / 2; 
       offsetY = CANVAS_HEIGHT / 2;
-      console.warn("ADVERTENCIA CRÍTICA: Límites del DXF inválidos o demasiado grandes. Forzando una escala mínima y centrado. Use el zoom para encontrar el dibujo.");
+      console.warn("ADVERTENCIA CRÍTICA: Límites del DXF inválidos o demasiado grandes. Forzando una escala mínima y centrado.");
     }
-    console.log("DIAGNÓSTICO DE LÍMITES:");
-    console.log(`MinY: ${minY}, MaxY: ${maxY}`);
-    console.log(`DrawingHeight: ${drawingHeight}, DrawingWidth: ${drawingWidth}`);
-    console.log(`NewScale: ${newScale}`);
-    console.log(`OffsetY calculado: ${offsetY}`);
-    console.log(`Posición Y FINAL aplicada: ${offsetY + CANVAS_HEIGHT}`);
     
     setScale(newScale);
     setOffset({ x: offsetX, y: offsetY });
     setDebugInfo(`Scale: ${newScale.toFixed(8)}, Offset: (${offsetX.toFixed(0)}, ${offsetY.toFixed(0)})`);
+// 🔑 CORRECCIÓN: Agregar 'initialView' a la lista de dependencias
 }, [entities, initialView]); // Dependencias correctas
 
     const handleWheel = (e) => {
