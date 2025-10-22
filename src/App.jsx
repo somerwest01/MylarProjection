@@ -22,18 +22,23 @@ function App() {
     scale: 1, 
     offset: { x: 500, y: 300 } 
   });
+ const [canvasKey, setCanvasKey] = useState(0);
 
-  const handleNewDrawing = () => {
+const handleNewDrawing = () => {
+    // 1. Limpiar todos los datos del dibujo
     setDxfEntities([]);
     setBlockDefinitions({});
     setDrawingMode('pan'); 
     setImportError(false);
     setIsCanvasInitialized(true); 
 
-   setInitialView({
+    // 2. Establecer la vista inicial. (Garantiza que el valor se propague)
+    setInitialView({
         scale: 1, 
-        offset: { x: 500, y: 300 } // Centra el 0,0 en el lienzo de 1000x600
+        offset: { x: 500, y: 300 } 
     });
+
+    setCanvasKey(prevKey => prevKey + 1); 
 
     console.log('Nuevo dibujo iniciado.');
   };
@@ -138,6 +143,7 @@ useEffect(() => {
         
         {/* 🔑 DxfCanvas SE MONTA SIEMPRE, listo para recibir clics */}
         <DxfCanvas 
+         key={canvasKey}
           entities={dxfEntities} 
           setEntities={setDxfEntities} 
           blocks={blockDefinitions}
@@ -256,6 +262,7 @@ useEffect(() => {
 }
 
 export default App;
+
 
 
 
