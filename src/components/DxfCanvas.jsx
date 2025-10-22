@@ -7,7 +7,7 @@ const INITIAL_SCALE = 1;
 
 const isSafeNumber = (c) => typeof c === 'number' && isFinite(c);
 
-function DxfCanvas({ entities, setEntities, blocks, drawingMode, setDrawingMode, isOrthoActive, isSnapActive, lineColor, initialView }) {
+function DxfCanvas({ entities, setEntities, blocks, drawingMode, setDrawingMode, isOrthoActive, isSnapActive, lineColor }) {
   const stageRef = useRef(null);
   const [scale, setScale] = useState(INITIAL_SCALE);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
@@ -40,7 +40,7 @@ function DxfCanvas({ entities, setEntities, blocks, drawingMode, setDrawingMode,
         x: Math.round(relativePoint.x), 
         y: Math.round(relativePoint.y) 
     };
-}, [scale, offset]); 
+}, []); 
 
   // 🔑 NUEVO EFECTO: Resetea el estado de dibujo cuando el modo cambia
 useEffect(() => {
@@ -53,24 +53,13 @@ useEffect(() => {
 }, [drawingMode]); 
   
   // EFECTO para centrar y escalar el dibujo al cargar
-useEffect(() => {
-    
-    // 🔑 CORRECCIÓN CRÍTICA: Lógica para lienzo vacío (Nuevo Dibujo)
-    if (!entities || entities.length === 0) {
-        if (initialView) { 
-            // Aplicar la vista inicial si se proporciona (desde "Nuevo Dibujo")
-            setScale(initialView.scale);
-            setOffset(initialView.offset);
-            setDebugInfo(`View Initialized: Scale: ${initialView.scale}, Offset: (${initialView.offset.x}, ${initialView.offset.y})`);
-        }
-        return; // Salir y evitar el cálculo de límites infinitos
-    } 
+  useEffect(() => {
+    if (!entities || entities.length === 0) return;
 
-    // --- LÓGICA DE CÁLCULO DE BOUNDING BOX (Solo si hay entidades) ---
     let minX = Infinity, minY = Infinity;
     let maxX = -Infinity, maxY = -Infinity;
     
-    const SAFE_LIMIT = 1e9;
+    const SAFE_LIMIT = 1e9; // 1 billón (1,000,000,000)
     const isValidCoord = (c) => typeof c === 'number' && isFinite(c) && Math.abs(c) < SAFE_LIMIT;
 
     entities.forEach(entity => {
@@ -95,6 +84,7 @@ useEffect(() => {
           maxY = Math.max(maxY, entity.center.y + entity.radius);
         }
       } else if (entity.type === 'POLYLINE_GEOM' && entity.points) {
+          // Iterar sobre los puntos de la polilínea
           for(let i = 0; i < entity.points.length; i += 2) {
               const x = entity.points[i];
               const y = entity.points[i+1];
@@ -109,6 +99,7 @@ useEffect(() => {
               }
           }
       } else if (entity.type === 'MTEXT') {
+        // En dxf-importer.js, el MTEXT se exporta con entity.x y entity.y
         const x = entity.x; 
         const y = entity.y;
 
@@ -145,28 +136,38 @@ useEffect(() => {
     const isLimitsValid = minX !== Infinity && maxX !== -Infinity && drawingWidth > 0 && drawingHeight > 0;
     
     if (isLimitsValid) {
+      // Si los límites son válidos, calculamos la escala y el offset normal
       const padding = 50;
       const scaleX = (CANVAS_WIDTH - padding) / drawingWidth;
       const scaleY = (CANVAS_HEIGHT - padding) / drawingHeight;
       newScale = Math.min(scaleX, scaleY);
       
+      // ... (cálculo de centerX/centerY y offsetX/offsetY) ...
       const centerX = minX + drawingWidth / 2;
       const centerY = minY + drawingHeight / 2;
 
       offsetX = (CANVAS_WIDTH / 2) - (centerX * newScale);
       offsetY = (CANVAS_HEIGHT / 2) - (centerY * (-newScale));
     } else {
-      newScale = 0.0000001; 
-      offsetX = CANVAS_WIDTH / 2; 
+      // ⚠️ SOLUCIÓN DE FALLO: Si los límites son inválidos (Infinity/NaN), reseteamos la vista.
+      // Esto evita que Konva reciba un valor NaN en su Layer.x o Layer.y.
+      newScale = 0.0000001; // Forzamos una escala mínima (para que intente dibujar, aunque muy pequeño)
+      offsetX = CANVAS_WIDTH / 2; // Lo centramos en el medio del lienzo.
       offsetY = CANVAS_HEIGHT / 2;
-      console.warn("ADVERTENCIA CRÍTICA: Límites del DXF inválidos o demasiado grandes. Forzando una escala mínima y centrado.");
+      console.warn("ADVERTENCIA CRÍTICA: Límites del DXF inválidos o demasiado grandes. Forzando una escala mínima y centrado. Use el zoom para encontrar el dibujo.");
     }
+    console.log("DIAGNÓSTICO DE LÍMITES:");
+    console.log(`MinY: ${minY}, MaxY: ${maxY}`);
+    console.log(`DrawingHeight: ${drawingHeight}, DrawingWidth: ${drawingWidth}`);
+    console.log(`NewScale: ${newScale}`);
+    console.log(`OffsetY calculado: ${offsetY}`);
+    console.log(`Posición Y FINAL aplicada: ${offsetY + CANVAS_HEIGHT}`);
     
+    // ... (resto del useEffect: setScale, setOffset, setDebugInfo)
     setScale(newScale);
     setOffset({ x: offsetX, y: offsetY });
     setDebugInfo(`Scale: ${newScale.toFixed(8)}, Offset: (${offsetX.toFixed(0)}, ${offsetY.toFixed(0)})`);
-// 🔑 CORRECCIÓN: Agregar 'initialView' a la lista de dependencias
-}, [entities, initialView]); // Dependencias correctas
+  }, []); 
 
     const handleWheel = (e) => {
     e.evt.preventDefault();
@@ -201,10 +202,8 @@ const handleMouseDown = useCallback((e) => {
     
     // 🔑 LÓGICA DE DIBUJO DE LÍNEA
     if (drawingMode === 'line') {
-      let clickedPoint = getRelativePoint(stage);
+      const clickedPoint = getRelativePoint(stage);
       if (!clickedPoint) return;
-
-      clickedPoint = getSnappedPoint(clickedPoint);
 
       if (!lineStartPoint) {
         // Primer clic: Iniciar la línea
@@ -240,7 +239,7 @@ const handleMouseDown = useCallback((e) => {
       setIsDragging(true);
       setLastPos({ x: e.evt.clientX, y: e.evt.clientY });
     }
-}, [drawingMode, lineStartPoint, currentEndPoint, getRelativePoint, setEntities, isTypingLength, lineColor, getSnappedPoint]);
+}, [drawingMode, lineStartPoint, currentEndPoint, getRelativePoint, setEntities, isTypingLength]);
   
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
@@ -383,7 +382,7 @@ const handleMouseMove = useCallback((e) => {
             type: 'LINE',
             start: lineStartPoint,
             end: { x: Math.round(newEndPoint.x), y: Math.round(newEndPoint.y) },
-            color: lineColor
+            color: 'green' 
         };
         
         // 4. Agregar la línea, establecer el nuevo inicio y salir del modo tecleo
@@ -429,7 +428,7 @@ const handleMouseMove = useCallback((e) => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
 
-}, [drawingMode, lineStartPoint, currentEndPoint, setEntities, isTypingLength, typedLength, lineColor]);
+}, [drawingMode, lineStartPoint, currentEndPoint, setEntities, isTypingLength, typedLength]);
   
 
   const renderInternalEntity = (blockEntity, blockIndex) => {
