@@ -7,7 +7,7 @@ const INITIAL_SCALE = 1;
 
 const isSafeNumber = (c) => typeof c === 'number' && isFinite(c);
 
-function DxfCanvas({ entities, setEntities, blocks, drawingMode, setDrawingMode, isOrthoActive, isSnapActive, lineColor }) {
+function DxfCanvas({ entities, setEntities, blocks, drawingMode, setDrawingMode, isOrthoActive, isSnapActive, lineColor, lineThicknessMm }) {
   const stageRef = useRef(null);
   const [scale, setScale] = useState(INITIAL_SCALE);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
@@ -382,7 +382,8 @@ const handleMouseMove = useCallback((e) => {
             type: 'LINE',
             start: lineStartPoint,
             end: { x: Math.round(newEndPoint.x), y: Math.round(newEndPoint.y) },
-            color: lineColor 
+            color: lineColor,
+            thickness: lineThicknessMm
         };
         
         // 4. Agregar la línea, establecer el nuevo inicio y salir del modo tecleo
