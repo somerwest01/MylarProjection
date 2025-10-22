@@ -623,7 +623,7 @@ return (
                 <Line
                     points={[lineStartPoint.x, lineStartPoint.y, currentEndPoint.x, currentEndPoint.y]}
                     stroke={lineColor}
-                    strokeWidth={lineThicknessMm / scale} // Se mantiene delgado sin importar el zoom
+                    strokeWidth={1 / scale} // Se mantiene delgado sin importar el zoom
                     dash={[10 / scale, 5 / scale]} 
                 />
             )}
