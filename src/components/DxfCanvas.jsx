@@ -382,7 +382,7 @@ const handleMouseMove = useCallback((e) => {
             type: 'LINE',
             start: lineStartPoint,
             end: { x: Math.round(newEndPoint.x), y: Math.round(newEndPoint.y) },
-            color: 'green' 
+            color: lineColor 
         };
         
         // 4. Agregar la línea, establecer el nuevo inicio y salir del modo tecleo
