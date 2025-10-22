@@ -1,6 +1,26 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { Stage, Layer, Line, Circle, Text, Group } from 'react-konva';
 
+const ContextMenuButton = ({ iconClass, name, onClick, isActive }) => (
+    <div
+        onClick={onClick}
+        style={{
+            display: 'flex',
+            alignItems: 'center',
+            padding: '8px 15px',
+            cursor: 'pointer',
+            backgroundColor: isActive ? '#e0f7fa' : 'white',
+            fontWeight: isActive ? 'bold' : 'normal',
+            borderLeft: isActive ? '3px solid #00bcd4' : 'none',
+        }}
+        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = isActive ? '#e0f7fa' : '#f0f0f0'}
+        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = isActive ? '#e0f7fa' : 'white'}
+    >
+        <i className={iconClass} style={{ marginRight: '10px', width: '20px', textAlign: 'center' }}></i>
+        <span>{name}</span>
+    </div>
+);
+
 const CANVAS_WIDTH = 1000;
 const CANVAS_HEIGHT = 600;
 const INITIAL_SCALE = 1;
@@ -19,23 +39,21 @@ function DxfCanvas({ entities, setEntities, blocks, drawingMode, setDrawingMode,
   const [tempEntities, setTempEntities] = useState([]);
   const [isTypingLength, setIsTypingLength] = useState(false);
   const [typedLength, setTypedLength] = useState(''); 
+  const [contextMenu, setContextMenu] = useState(null);
   
 
   const getRelativePoint = useCallback((stage) => {
     const pointer = stage.getPointerPosition();
     if (!pointer) return null;
 
-    // Convertir de coordenadas de la pantalla a coordenadas del Layer (mundo)
-    const layer = stage.children[0]; // Asume que Layer es el primer hijo de Stage
+    const layer = stage.children[0]; 
     const layerTransform = layer.getAbsoluteTransform().copy();
     
-    // Invertir la transformación Y (debido al scaleY=-scale)
+
     layerTransform.invert();
     
-    // Aplicar la transformación y obtener el punto relativo
     const relativePoint = layerTransform.point({ x: pointer.x, y: pointer.y });
     
-    // Retornamos solo números enteros (sin decimales)
     return { 
         x: Math.round(relativePoint.x), 
         y: Math.round(relativePoint.y) 
@@ -196,6 +214,10 @@ const handleMouseDown = useCallback((e) => {
     e.evt.preventDefault();
     const stage = stageRef.current;
     if (!stage) return;
+  
+    if (contextMenu) {
+    setContextMenu(null);
+  }
 
     // Ignorar clics mientras el usuario está tecleando la longitud
     if (isTypingLength) return; 
@@ -282,9 +304,35 @@ const getSnappedPoint = useCallback((currentPoint) => {
     return bestSnapPoint;
 }, [isSnapActive, entities, scale]);
 
+const handleContextMenu = (e) => {
+    // 1. Evitar el menú contextual del navegador
+    e.evt.preventDefault(); 
+    const stage = stageRef.current;
+    if (!stage) return;
+
+    // 2. Determinar si se hizo clic sobre una entidad
+    const clickedOnShape = e.target !== stage && e.target.getStage() === stage;
+
+    if (clickedOnShape) {
+        // Si hacemos clic en una entidad, el menú no aparece, y podrías implementar la selección.
+        // Por ahora, solo ocultamos el menú si estuviera visible.
+        setContextMenu(null);
+    } else {
+        // 3. Mostrar el menú en las coordenadas del ratón (en píxeles de pantalla)
+        setContextMenu({
+            x: e.evt.clientX,
+            y: e.evt.clientY,
+        });
+    }
+};
+
 const handleMouseMove = useCallback((e) => {
     const stage = stageRef.current;
     if (!stage) return;
+
+    if (contextMenu) {
+    setContextMenu(null);
+  }
     
     // Lógica de Pan
     if (drawingMode === 'pan' && isDragging) {
@@ -608,7 +656,8 @@ return (
       onWheel={handleWheel} 
       onMouseDown={handleMouseDown} 
       onMouseUp={handleMouseUp} 
-      onMouseMove={handleMouseMove} 
+      onMouseMove={handleMouseMove}
+      onContextMenu={handleContextMenu}
       style={{ border: '1px solid #ddd', cursor: isDragging ? 'grabbing' : (drawingMode === 'line' ? 'crosshair' : 'grab') }} // ✨ Añadir cursor 'crosshair'
     >
         {/* 1. CAPA PRINCIPAL DE DIBUJO (CON ESCALA Y OFFSET) */}
@@ -673,6 +722,46 @@ return (
                 x={10} 
                 y={CANVAS_HEIGHT - 30} 
             />
+          {/* Menú Contextual Flotante */}
+{contextMenu && (
+    <div
+        style={{
+            position: 'fixed',
+            top: contextMenu.y,
+            left: contextMenu.x,
+            backgroundColor: 'white',
+            border: '1px solid #ccc',
+            boxShadow: '2px 2px 10px rgba(0, 0, 0, 0.2)',
+            borderRadius: '4px',
+            zIndex: 1000,
+            padding: '5px 0',
+            minWidth: '150px',
+            fontFamily: 'Arial, sans-serif'
+        }}
+    >
+        <ContextMenuButton
+            iconClass="fa-solid fa-mouse-pointer"
+            name="Selección"
+            onClick={() => {
+                setDrawingMode('select'); // Nuevo modo
+                setContextMenu(null);
+            }}
+            isActive={drawingMode === 'select'}
+        />
+        <ContextMenuButton
+            iconClass="fa-solid fa-hand-paper"
+            name="Mover dibujo (Pan)"
+            onClick={() => {
+                setDrawingMode('pan');
+                setContextMenu(null);
+            }}
+            isActive={drawingMode === 'pan'}
+        />
+    </div>
+)}
+
+{/* Debes añadir el componente ContextMenuButton para que funcione */}
+<ContextMenuButton />
         </Layer>
     </Stage>
 );
