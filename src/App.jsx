@@ -18,6 +18,7 @@ function App() {
   const [isOrthoActive, setIsOrthoActive] = useState(false);
   const [isSnapActive, setIsSnapActive] = useState(false);
   const [lineColor, setLineColor] = useState('#000000');
+  const [lineThicknessMm, setLineThicknessMm] = useState(0.5);
 
   const handleNewDrawing = () => {
     setDxfEntities([]);
@@ -137,6 +138,7 @@ useEffect(() => {
          isOrthoActive={isOrthoActive}
          isSnapActive={isSnapActive}
          lineColor={lineColor}
+         lineThicknessMm={lineThicknessMm}
         /> 
       </>
     );
@@ -182,7 +184,7 @@ useEffect(() => {
           fontSize: '12px',
           flexShrink: 0
         }}>
-{/* Mostramos primero el selector de color */}
+       {/* Mostramos primero el selector de color */}
           <span style={{ marginRight: '10px' }}>Color:</span>
           {/* 🔑 SELECTOR DE COLOR EN BARRA DE ESTADO */}
           <input
@@ -205,6 +207,21 @@ useEffect(() => {
           <span style={{ marginRight: '20px' }}>
             Estado: {drawingMode === 'line' ? 'Dibujando Línea' : 'Pan'}
           </span>
+         <span style={{ marginRight: '10px' }}>Grosor (mm):</span>
+<input
+  type="number"
+  value={lineThicknessMm}
+  onChange={(e) => setLineThicknessMm(parseFloat(e.target.value) || 0.1)}
+  min="0.1"
+  step="0.1"
+  style={{
+    width: '60px', 
+    padding: '2px 5px',
+    marginRight: '20px',
+    borderRadius: '3px',
+    border: '1px solid #ccc'
+  }}
+/>
           
           {/* BOTÓN ORTHO (F8) */}
           <button
@@ -246,4 +263,5 @@ useEffect(() => {
 }
 
 export default App;
+
 
