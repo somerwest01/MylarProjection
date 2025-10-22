@@ -18,27 +18,13 @@ function App() {
   const [isOrthoActive, setIsOrthoActive] = useState(false);
   const [isSnapActive, setIsSnapActive] = useState(false);
   const [lineColor, setLineColor] = useState('#000000');
-  const [initialView, setInitialView] = useState({ 
-    scale: 1, 
-    offset: { x: 500, y: 300 } 
-  });
- const [canvasKey, setCanvasKey] = useState(0);
 
-const handleNewDrawing = () => {
-    // 1. Limpiar todos los datos del dibujo
+  const handleNewDrawing = () => {
     setDxfEntities([]);
     setBlockDefinitions({});
     setDrawingMode('pan'); 
     setImportError(false);
     setIsCanvasInitialized(true); 
-
-    // 2. Establecer la vista inicial. (Garantiza que el valor se propague)
-    setInitialView({
-        scale: 1, 
-        offset: { x: 500, y: 300 } 
-    });
-
-    setCanvasKey(prevKey => prevKey + 1); 
 
     console.log('Nuevo dibujo iniciado.');
   };
@@ -143,7 +129,6 @@ useEffect(() => {
         
         {/* 🔑 DxfCanvas SE MONTA SIEMPRE, listo para recibir clics */}
         <DxfCanvas 
-         key={canvasKey}
           entities={dxfEntities} 
           setEntities={setDxfEntities} 
           blocks={blockDefinitions}
@@ -152,7 +137,6 @@ useEffect(() => {
          isOrthoActive={isOrthoActive}
          isSnapActive={isSnapActive}
          lineColor={lineColor}
-         initialView={initialView}
         /> 
       </>
     );
@@ -262,8 +246,4 @@ useEffect(() => {
 }
 
 export default App;
-
-
-
-
 
