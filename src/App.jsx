@@ -18,7 +18,10 @@ function App() {
   const [isOrthoActive, setIsOrthoActive] = useState(false);
   const [isSnapActive, setIsSnapActive] = useState(false);
   const [lineColor, setLineColor] = useState('#000000');
-  const [initialView, setInitialView] = useState(null);
+  const [initialView, setInitialView] = useState({ 
+    scale: 1, 
+    offset: { x: 500, y: 300 } 
+  });
 
   const handleNewDrawing = () => {
     setDxfEntities([]);
@@ -253,6 +256,7 @@ useEffect(() => {
 }
 
 export default App;
+
 
 
 
