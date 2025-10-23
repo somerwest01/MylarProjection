@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { Stage, Layer, Line, Circle, Text, Group } from 'react-konva';
+import { Stage, Layer, Line, Circle, Text, Group, Rect } from 'react-konva';
 
 const ContextMenuButton = ({ iconClass, name, onClick, isActive }) => (
     <div
@@ -40,6 +40,8 @@ function DxfCanvas({ entities, setEntities, blocks, drawingMode, setDrawingMode,
   const [isTypingLength, setIsTypingLength] = useState(false);
   const [typedLength, setTypedLength] = useState(''); 
   const [contextMenu, setContextMenu] = useState(null);
+  const [hoveredEntityIndex, setHoveredEntityIndex] = useState(null);
+  const [selectedEntityIndex, setSelectedEntityIndex] = useState(null);
   
 
   const getRelativePoint = useCallback((stage) => {
@@ -68,7 +70,11 @@ useEffect(() => {
         setTypedLength(''); // Limpia cualquier dimensión tecleada
         setIsTypingLength(false); // Sale del modo de entrada numérica
     }
-}, [drawingMode]); 
+if (drawingMode !== 'select') {
+        setSelectedEntityIndex(null);
+        setHoveredEntityIndex(null);
+    }
+}, [drawingMode]);
   
   // EFECTO para centrar y escalar el dibujo al cargar
   useEffect(() => {
@@ -167,8 +173,6 @@ useEffect(() => {
       offsetX = (CANVAS_WIDTH / 2) - (centerX * newScale);
       offsetY = (CANVAS_HEIGHT / 2) - (centerY * (-newScale));
     } else {
-      // ⚠️ SOLUCIÓN DE FALLO: Si los límites son inválidos (Infinity/NaN), reseteamos la vista.
-      // Esto evita que Konva reciba un valor NaN en su Layer.x o Layer.y.
       newScale = 0.0000001; // Forzamos una escala mínima (para que intente dibujar, aunque muy pequeño)
       offsetX = CANVAS_WIDTH / 2; // Lo centramos en el medio del lienzo.
       offsetY = CANVAS_HEIGHT / 2;
@@ -218,6 +222,13 @@ const handleMouseDown = useCallback((e) => {
     if (contextMenu) {
     setContextMenu(null);
   }
+
+if (e.target === stage) { 
+        if (drawingMode === 'select') {
+            setSelectedEntityIndex(null); // Deselect if in 'select' mode
+            setHoveredEntityIndex(null); // Also clear hover
+        }
+    }
 
     // Ignorar clics mientras el usuario está tecleando la longitud
     if (isTypingLength) return; 
@@ -571,6 +582,85 @@ const handleMouseMove = useCallback((e) => {
             console.error(`Línea ${index} omitida (Error de coordenadas no finitas):`, linePoints);
             return null;
         } 
+            const isHovered = drawingMode === 'select' && hoveredEntityIndex === index;
+        const isSelected = drawingMode === 'select' && selectedEntityIndex === index;
+        
+        const entityThickness = entity.thickness || 1;
+        const baseStrokeWidth = entityThickness / scale;
+        const strokeColor = entity.color || 'black';
+        
+        // Propiedades visuales
+        const currentStroke = isHovered ? 'blue' : strokeColor;
+        // Si está en hover, lo hacemos más grueso, si está seleccionado, mantenemos el grosor base para que el punteado se vea bien.
+        const currentStrokeWidth = isHovered ? (baseStrokeWidth * 1.5) : baseStrokeWidth;
+        const currentDash = isSelected ? [5 / scale, 5 / scale] : []; // Línea punteada si está seleccionada
+        
+        const lineComponent = (
+          <Line
+            key={`line-${index}`}
+            points={linePoints}
+            stroke={currentStroke}
+            strokeWidth={currentStrokeWidth}
+            dash={currentDash}
+            
+            // 🔑 Efectos visuales de sombreado (Hover/Selección)
+            shadowBlur={isHovered || isSelected ? 8 / scale : 0} 
+            shadowColor={isHovered ? 'blue' : 'black'}
+            
+            // 🔑 Eventos de selección
+            onMouseEnter={() => {
+                if (drawingMode === 'select') setHoveredEntityIndex(index);
+            }}
+            onMouseLeave={() => {
+                if (drawingMode === 'select') setHoveredEntityIndex(null);
+            }}
+            onClick={(e) => {
+                // Previene que el clic se propague al Stage (handleMouseDown) para deselección de fondo
+                e.cancelBubble = true; 
+                if (drawingMode === 'select') {
+                    // Toglea la selección
+                    setSelectedEntityIndex(prevIndex => prevIndex === index ? null : index);
+                }
+            }}
+          />
+        );      
+        
+        if (isSelected) {
+             const handleSize = 6 / scale; // Tamaño del recuadro de selección en unidades del mundo
+             const halfHandleSize = handleSize / 2;
+
+             return (
+                 <Group key={index}>
+                    {lineComponent}
+                    {/* Handle 1 (Start Point) - Cuadrado Azul con Borde Negro */}
+                    <Rect
+                        x={entity.start.x - halfHandleSize}
+                        y={entity.start.y - halfHandleSize}
+                        width={handleSize}
+                        height={handleSize}
+                        fill="blue"
+                        stroke="black"
+                        strokeWidth={1 / scale}
+                        // name="handle-start" // Para futura manipulación
+                    />
+                    {/* Handle 2 (End Point) - Cuadrado Azul con Borde Negro */}
+                     <Rect
+                        x={entity.end.x - halfHandleSize}
+                        y={entity.end.y - halfHandleSize}
+                        width={handleSize}
+                        height={handleSize}
+                        fill="blue"
+                        stroke="black"
+                        strokeWidth={1 / scale}
+                        // name="handle-end" // Para futura manipulación
+                    />
+                 </Group>
+             );
+        }
+        
+        return lineComponent;
+
+            
         const entityThickness = entity.thickness || 1;
         const actualLineStrokeWidth = entityThickness / scale;   
         return (
