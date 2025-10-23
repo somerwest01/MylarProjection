@@ -658,19 +658,7 @@ const handleMouseMove = useCallback((e) => {
              );
         }
         
-        return lineComponent;
-
-            
-        const entityThickness = entity.thickness || 1;
-        const actualLineStrokeWidth = entityThickness / scale;   
-        return (
-          <Line
-            key={index}
-            points={linePoints}
-            stroke={strokeColor}
-            strokeWidth={actualLineStrokeWidth}
-          />
-        );      
+        return lineComponent; 
       case 'CIRCLE':
         if (!entity.center || isNaN(entity.center.x) || isNaN(entity.radius)) return null;
         return (
