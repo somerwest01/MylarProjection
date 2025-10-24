@@ -149,6 +149,7 @@ content = (
   }else if (activeMenu === 'elements') {
     title = 'Elementos';
     content = (
+        <div>
     <h4>Herramientas de Elementos</h4>
         {/* BOTÓN ALAMBRE SUELTO */}
         <button 
@@ -257,6 +258,7 @@ content = (
 }
 
 export default MenuPanel;
+
 
 
 
