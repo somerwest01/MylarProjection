@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 
 // MenuPanel es el panel que se despliega (la "caja" de herramientas)
 // 💡 CORRECCIÓN 1: Se reemplazó 'onNewDrawing' por 'onSelectNewProject' en los props
@@ -243,4 +243,5 @@ content = (
 }
 
 export default MenuPanel;
+
 
