@@ -64,7 +64,7 @@ function DxfCanvas({ entities, setEntities, blocks, drawingMode, setDrawingMode,
 
   // 🔑 NUEVO EFECTO: Resetea el estado de dibujo cuando el modo cambia
 useEffect(() => {
-    if (drawingMode !== 'line') {
+    if (drawingMode !== 'line' && drawingMode !== 'looseWire') {
         setLineStartPoint(null); 
         setCurrentEndPoint(null);
         setTypedLength(''); // Limpia cualquier dimensión tecleada
@@ -234,7 +234,7 @@ if (e.target === stage) {
     if (isTypingLength) return; 
     
     // 🔑 LÓGICA DE DIBUJO DE LÍNEA
-    if (drawingMode === 'line') {
+    if (drawingMode === 'line' || drawingMode === 'looseWire') {
       const clickedPoint = getRelativePoint(stage);
       if (!clickedPoint) return;
 
@@ -249,9 +249,11 @@ if (e.target === stage) {
         
       } else {
         const finalPoint = currentEndPoint || clickedPoint; 
+
+        const entityType = drawingMode === 'looseWire' ? 'LOOSE_WIRE' : 'LINE';
         
         const newLine = {
-          type: 'LINE',
+          type: entityType,
           start: lineStartPoint,
           end: finalPoint,
           color: lineColor,
@@ -361,7 +363,7 @@ const handleMouseMove = useCallback((e) => {
     }
     
     // 🔑 LÓGICA DE VISTA PREVIA DE LÍNEA
-    if (drawingMode === 'line' || drawingMode === 'looseWire') && lineStartPoint && !isTypingLength) {
+    if ((drawingMode === 'line' || drawingMode === 'looseWire') && lineStartPoint && !isTypingLength) {
         let point = getRelativePoint(stage);
         if (!point) return;
 
@@ -389,7 +391,7 @@ const handleMouseMove = useCallback((e) => {
     // 🔑 Manejador de entrada de teclado para la longitud
     const handleKeyDown = (e) => {
       // Solo interesa si estamos en modo 'line' Y ya tenemos un punto de inicio
-      if (drawingMode !== 'line' && drawingMode !== 'looseWire') || !lineStartPoint) return; 
+      if ((drawingMode !== 'line' && drawingMode !== 'looseWire') || !lineStartPoint) return;
 
       if (['0','1','2','3','4','5','6','7','8','9'].includes(e.key)) {
           e.preventDefault(); // CRÍTICO: Evita que la tecla afecte a cualquier otro elemento
