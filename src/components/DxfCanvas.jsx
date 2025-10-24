@@ -361,7 +361,7 @@ const handleMouseMove = useCallback((e) => {
     }
     
     // 🔑 LÓGICA DE VISTA PREVIA DE LÍNEA
-    if (drawingMode === 'line' && lineStartPoint && !isTypingLength) {
+    if (drawingMode === 'line' || drawingMode === 'looseWire') && lineStartPoint && !isTypingLength) {
         let point = getRelativePoint(stage);
         if (!point) return;
 
@@ -389,7 +389,7 @@ const handleMouseMove = useCallback((e) => {
     // 🔑 Manejador de entrada de teclado para la longitud
     const handleKeyDown = (e) => {
       // Solo interesa si estamos en modo 'line' Y ya tenemos un punto de inicio
-      if (drawingMode !== 'line' || !lineStartPoint) return; 
+      if (drawingMode !== 'line' && drawingMode !== 'looseWire') || !lineStartPoint) return; 
 
       if (['0','1','2','3','4','5','6','7','8','9'].includes(e.key)) {
           e.preventDefault(); // CRÍTICO: Evita que la tecla afecte a cualquier otro elemento
@@ -437,9 +437,9 @@ const handleMouseMove = useCallback((e) => {
             setIsTypingLength(false);
             return;
         }
-        
+        const entityType = drawingMode === 'looseWire' ? 'LOOSE_WIRE' : 'LINE';
         const newLine = {
-            type: 'LINE',
+            type: entityType,
             start: lineStartPoint,
             end: { x: Math.round(newEndPoint.x), y: Math.round(newEndPoint.y) },
             color: lineColor,
@@ -489,7 +489,7 @@ const handleMouseMove = useCallback((e) => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
 
-}, [drawingMode, lineStartPoint, currentEndPoint, setEntities, isTypingLength, typedLength]);
+}, [drawingMode, lineStartPoint, currentEndPoint, setEntities, isTypingLength, typedLength, lineColor, lineThicknessMm]);
   
 
   const renderInternalEntity = (blockEntity, blockIndex) => {
@@ -498,6 +498,7 @@ const handleMouseMove = useCallback((e) => {
 
     switch (blockEntity.type) {
         case 'LINE':
+            case 'LOOSE_WIRE':
             if (!blockEntity.start || !blockEntity.end) return null;
             const linePoints = [blockEntity.start.x, blockEntity.start.y, blockEntity.end.x, blockEntity.end.y];
             return (
@@ -582,7 +583,8 @@ const handleMouseMove = useCallback((e) => {
             console.error(`Línea ${index} omitida (Error de coordenadas no finitas):`, linePoints);
             return null;
         } 
-            const isHovered = drawingMode === 'select' && hoveredEntityIndex === index;
+            
+        const isHovered = drawingMode === 'select' && hoveredEntityIndex === index;
         const isSelected = drawingMode === 'select' && selectedEntityIndex === index;
         
         const entityThickness = entity.thickness || 1;
