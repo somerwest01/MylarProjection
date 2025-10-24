@@ -659,6 +659,37 @@ const handleMouseMove = useCallback((e) => {
         }
         
         return lineComponent; 
+case 'LOOSE_WIRE':
+        if (!entity.start || !entity.end || !isSafeNumber(entity.thickness)) return null;
+
+        const linePointsWire = [
+            entity.start.x, 
+            entity.start.y, 
+            entity.end.x, 
+            entity.end.y
+        ];
+        
+        const baseThicknessWire = entity.thickness;
+        // Grosor secundario es la mitad del grosor principal
+        const halfThicknessWire = baseThicknessWire / 2;
+
+        return (
+            <Group key={index}>
+                {/* 1. Base Line (Blue) */}
+                <Line
+                    points={linePointsWire}
+                    stroke={'blue'}
+                    strokeWidth={baseThicknessWire / scale}
+                />
+                {/* 2. Secondary Line (Yellow) */}
+                <Line
+                    points={linePointsWire}
+                    stroke={'yellow'}
+                    strokeWidth={halfThicknessWire / scale}
+                />
+            </Group>
+        );
+            
       case 'CIRCLE':
         if (!entity.center || isNaN(entity.center.x) || isNaN(entity.radius)) return null;
         return (
@@ -768,7 +799,31 @@ return (
             )}
             {/* Todas las entidades permanentes */}
             {entities.map((entity, index) => renderEntity(entity, index))}
+
+            {/* 🔑 Vista previa de ALAMBRE SUELTO (LOOSE_WIRE) */}
+            {drawingMode === 'looseWire' && lineStartPoint && currentEndPoint && (
+                <Group>
+                    {/* Base Line (Blue) */}
+                    <Line
+                        points={[lineStartPoint.x, lineStartPoint.y, currentEndPoint.x, currentEndPoint.y]}
+                        stroke={'blue'} // Color fijo
+                        strokeWidth={lineThicknessMm / scale} // Grosor completo
+                        dash={[10 / scale, 5 / scale]} 
+                    />
+                    {/* Secondary Line (Yellow) - Half thickness */}
+                    <Line
+                        points={[lineStartPoint.x, lineStartPoint.y, currentEndPoint.x, currentEndPoint.y]}
+                        stroke={'yellow'} // Color fijo
+                        strokeWidth={(lineThicknessMm / 2) / scale} // Mitad de grosor
+                        dash={[10 / scale, 5 / scale]} 
+                    />
+                </Group>
+            )}
+
+            {/* Todas las entidades permanentes */}
+            {entities.map((entity, index) => renderEntity(entity, index))}
         </Layer>
+        
         
         {/* 2. CAPA DE HUD Y DEBUG (SIN ESCALA NI OFFSET - se superpone) */}
         {/* Usamos un solo Layer para ambos elementos de la UI/HUD */}
