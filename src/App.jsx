@@ -19,16 +19,21 @@ function App() {
   const [isSnapActive, setIsSnapActive] = useState(false);
   const [lineColor, setLineColor] = useState('#000000');
   const [lineThicknessMm, setLineThicknessMm] = useState(0.5);
+  const [projectType, setProjectType] = useState(null);
+ 
 
-  const handleNewDrawing = () => {
+const startNewProject = (type) => { // Recibe 'dibujo' o 'enmallado'
     setDxfEntities([]);
     setBlockDefinitions({});
-    setDrawingMode('pan'); 
+    // El modo de dibujo inicial puede variar
+    setDrawingMode(type === 'dibujo' ? 'select' : 'pan'); 
     setImportError(false);
     setIsCanvasInitialized(true); 
+    setProjectType(type); // 🔑 Establece el tipo de proyecto
 
-    console.log('Nuevo dibujo iniciado.');
+    console.log(`Nuevo proyecto: ${type} iniciado.`);
   };
+ 
   const toggleOrtho = () => {
   setIsOrthoActive(prev => !prev);
   console.log('Modo ORTHO toggled.');
@@ -160,9 +165,11 @@ useEffect(() => {
         isOpen={isMenuOpen} 
         activeMenu={activeMenu} 
         onDxfFileSelect={handleDxfFileSelect}
+        onSelectNewProject={startNewProject}
         onNewDrawing={handleNewDrawing} 
         setDrawingMode={setDrawingMode}
         currentDrawingMode={drawingMode}
+        projectType={projectType}
       />
       
       {/* 🔑 NUEVO CONTENEDOR PRINCIPAL: Apila Canvas (se expande) y Barra de Estado (fija) */}
@@ -268,6 +275,7 @@ useEffect(() => {
 }
 
 export default App;
+
 
 
 
