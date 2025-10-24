@@ -159,6 +159,7 @@ content = (
   }
 
   return (
+    <>
 <div className={`menu-panel-container ${panelClass}`}>
       <div className="menu-content">
         <h2>{title}</h2>
@@ -240,6 +241,7 @@ content = (
 }
 
 export default MenuPanel;
+
 
 
 
