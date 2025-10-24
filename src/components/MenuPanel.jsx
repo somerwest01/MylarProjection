@@ -149,11 +149,25 @@ content = (
   }else if (activeMenu === 'elements') {
     title = 'Elementos';
     content = (
-      <div>
-        <p>Esta sección mostrará los elementos existentes en el dibujo.</p>
-        <button disabled>Seleccionar Todo</button>
-      </div>
-    );
+    <h4>Herramientas de Elementos</h4>
+        {/* BOTÓN ALAMBRE SUELTO */}
+        <button 
+          onClick={() => setDrawingMode(currentDrawingMode === 'looseWire' ? 'pan' : 'looseWire')}
+          style={{
+            padding: '8px',
+            marginRight: '10px',
+            backgroundColor: currentDrawingMode === 'looseWire' ? '#a5f3fc' : 'white', 
+            border: currentDrawingMode === 'looseWire' ? '2px solid #06b6d4' : '1px solid #ccc',
+            cursor: 'pointer'
+          }}
+        >
+          ✏️ Alambre suelto
+        </button>
+        <hr style={{ margin: '15px 0' }} />
+        <p>Otros elementos (Pendientes de definir).</p>
+        <button disabled>Seleccionar Todo</button>
+      </div>
+    );
   } else {
     title = 'Menú Desconocido';
     content = <p>Selecciona una opción del panel lateral.</p>;
@@ -243,5 +257,6 @@ content = (
 }
 
 export default MenuPanel;
+
 
 
