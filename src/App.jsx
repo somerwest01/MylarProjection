@@ -6,7 +6,7 @@ import { parseDxfFile, extractDxfEntities } from './utils/dxf-importer';
 import './App.css'; 
 
 function App() {
- const [activeMenu, setActiveMenu] = useState('design');
+  const [activeMenu, setActiveMenu] = useState('design');
   const [isMenuOpen, setIsMenuOpen] = useState(true);
   const [dxfData, setDxfData] = useState(null);
   const [dxfEntities, setDxfEntities] = useState([]);
@@ -14,15 +14,17 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [drawingMode, setDrawingMode] = useState('select');
   const [importError, setImportError] = useState(false);
+  // Estado inicializado en false para cumplir con el requisito de lienzo en blanco
   const [isCanvasInitialized, setIsCanvasInitialized] = useState(false); 
   const [isOrthoActive, setIsOrthoActive] = useState(false);
   const [isSnapActive, setIsSnapActive] = useState(false);
   const [lineColor, setLineColor] = useState('#000000');
   const [lineThicknessMm, setLineThicknessMm] = useState(0.5);
-  const [projectType, setProjectType] = useState(null);
- 
+  // 🔑 NUEVO ESTADO: Controla el tipo de proyecto seleccionado ('dibujo' o 'enmallado')
+  const [projectType, setProjectType] = useState(null); 
 
-const startNewProject = (type) => { // Recibe 'dibujo' o 'enmallado'
+  // 🔑 FUNCIÓN RENOMBRADA: Inicia el proyecto según el tipo seleccionado
+  const startNewProject = (type) => { // Recibe 'dibujo' o 'enmallado'
     setDxfEntities([]);
     setBlockDefinitions({});
     // El modo de dibujo inicial puede variar
@@ -33,7 +35,7 @@ const startNewProject = (type) => { // Recibe 'dibujo' o 'enmallado'
 
     console.log(`Nuevo proyecto: ${type} iniciado.`);
   };
- 
+  
   const toggleOrtho = () => {
   setIsOrthoActive(prev => !prev);
   console.log('Modo ORTHO toggled.');
@@ -69,8 +71,9 @@ useEffect(() => {
  
   const handleDxfFileSelect = (file) => {
     setLoading(true);
-    setImportError(false); // Limpiamos errores antes de intentar cargar
+    setImportError(false);
     setIsCanvasInitialized(true); 
+    setProjectType('dibujo'); // Asume que importar DXF es para un 'dibujo'
     
     const reader = new FileReader();
     
@@ -107,9 +110,11 @@ useEffect(() => {
   let canvasContent;
   
   if (!isCanvasInitialized) {
+    // 🔑 Renderizado inicial: Lienzo vacío con mensaje
     canvasContent = (
       <p style={{ textAlign: 'center' }}>
         ¡Bienvenido!<br/>
+        <span style={{ color: '#00bcd4' }}>Seleccione "Nuevo" en el menú de Diseño.</span>
       </p>
     );
   } else if (loading) {
@@ -123,7 +128,7 @@ useEffect(() => {
       </p>
     );
   } else {
-    // Caso: Canvas Listo (vacío por defecto, nuevo, o con DXF cargado)
+    // Caso: Canvas Listo
     canvasContent = (
       <>
         {/* Muestra cuántas entidades se encontraron (si hay) */}
@@ -133,18 +138,20 @@ useEffect(() => {
             </p>
         )}
         
-        {/* 🔑 DxfCanvas SE MONTA SIEMPRE, listo para recibir clics */}
-        <DxfCanvas 
-          entities={dxfEntities} 
-          setEntities={setDxfEntities} 
-          blocks={blockDefinitions}
-          drawingMode={drawingMode}
-          setDrawingMode={setDrawingMode}
+        {/* 🔑 DxfCanvas solo se renderiza si hay un projectType válido */}
+        {projectType && ( 
+          <DxfCanvas 
+            entities={dxfEntities} 
+            setEntities={setDxfEntities} 
+            blocks={blockDefinitions}
+            drawingMode={drawingMode}
+            setDrawingMode={setDrawingMode}
          isOrthoActive={isOrthoActive}
          isSnapActive={isSnapActive}
          lineColor={lineColor}
          lineThicknessMm={lineThicknessMm}
-        /> 
+          /> 
+        )}
       </>
     );
   }
@@ -165,11 +172,10 @@ useEffect(() => {
         isOpen={isMenuOpen} 
         activeMenu={activeMenu} 
         onDxfFileSelect={handleDxfFileSelect}
-        onSelectNewProject={startNewProject}
-        onNewDrawing={handleNewDrawing} 
+        onSelectNewProject={startNewProject} // 🔑 NUEVO NOMBRE DE PROP
         setDrawingMode={setDrawingMode}
         currentDrawingMode={drawingMode}
-        projectType={projectType}
+        projectType={projectType} // 🔑 NUEVA PROP
       />
       
       {/* 🔑 NUEVO CONTENEDOR PRINCIPAL: Apila Canvas (se expande) y Barra de Estado (fija) */}
@@ -191,7 +197,11 @@ useEffect(() => {
           fontSize: '12px',
           flexShrink: 0
         }}>
-       {/* Mostramos primero el selector de color */}
+       {/* Estado del proyecto */}
+        <span style={{ marginRight: '20px', fontWeight: 'bold' }}>
+           Proyecto: {projectType === 'dibujo' ? 'Dibujo CAD' : (projectType === 'enmallado' ? 'Enmallado' : 'Ninguno')}
+        </span>
+       {/* ... resto de la barra de estado ... */}
           <span style={{ marginRight: '10px' }}>Color:</span>
           {/* 🔑 SELECTOR DE COLOR EN BARRA DE ESTADO */}
           <input
@@ -212,12 +222,7 @@ useEffect(() => {
             }}
           />
           <span style={{ marginRight: '20px' }}>
-          Estado: {
-              drawingMode === 'line' ? 'Dibujando Línea' : 
-              drawingMode === 'pan' ? 'Mover (Pan)' :
-              drawingMode === 'select' ? 'Selección' :
-              'Inactivo'
-            }
+            Estado: {drawingMode === 'line' ? 'Dibujando Línea' : (drawingMode === 'select' ? 'Selección' : 'Pan')}
           </span>
          <span style={{ marginRight: '10px' }}>Grosor (mm):</span>
 <input
@@ -231,7 +236,8 @@ useEffect(() => {
     padding: '2px 5px',
     marginRight: '20px',
     borderRadius: '3px',
-    border: '1px solid #ccc'
+    border: '1px solid #ccc',
+    color: '#333'
   }}
 />
           
@@ -275,9 +281,3 @@ useEffect(() => {
 }
 
 export default App;
-
-
-
-
-
-
