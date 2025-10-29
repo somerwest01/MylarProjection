@@ -1,7 +1,6 @@
 import React, { useRef, useState } from 'react';
 
 // MenuPanel es el panel que se despliega (la "caja" de herramientas)
-// 💡 CORRECCIÓN 1: Se reemplazó 'onNewDrawing' por 'onSelectNewProject' en los props
 function MenuPanel({ isOpen, activeMenu, onDxfFileSelect, onSelectNewProject, setDrawingMode, currentDrawingMode, projectType }) { 
   const panelClass = isOpen ? 'open' : '';
   const fileInputRef = useRef(null);
@@ -149,33 +148,82 @@ content = (
   }else if (activeMenu === 'elements') {
     title = 'Elementos';
     content = (
-        <div>
-    <h4>Herramientas de Elementos</h4>
-        {/* BOTÓN ALAMBRE SUELTO */}
+      <div>
+        <h4>Herramientas de Elementos</h4>
+        {/* 🔑 BOTÓN "ALAMBRE SUELTO" - Diseño de dona */}
         <button 
           onClick={() => setDrawingMode(currentDrawingMode === 'looseWire' ? 'pan' : 'looseWire')}
           style={{
-            padding: '8px',
-            marginRight: '10px',
-            backgroundColor: currentDrawingMode === 'looseWire' ? '#a5f3fc' : 'white', 
-            border: currentDrawingMode === 'looseWire' ? '2px solid #06b6d4' : '1px solid #ccc',
-            cursor: 'pointer'
+            display: 'flex',
+            alignItems: 'center',
+            padding: '8px 10px',
+            backgroundColor: 'white', 
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            boxShadow: currentDrawingMode === 'looseWire' ? '0 0 10px rgba(0, 191, 255, 0.7)' : 'none', // Sombra azul cuando activo
+            transform: currentDrawingMode === 'looseWire' ? 'scale(1.02)' : 'scale(1)', // Pequeño escalado al estar activo
+            transition: 'all 0.2s ease-in-out', // Transición suave
+            outline: 'none',
+            width: '100%',
+            marginBottom: '10px',
+            // Añadir hover para realce
+            ':hover': {
+              transform: 'scale(1.05)',
+              boxShadow: '0 0 8px rgba(0, 191, 255, 0.5)',
+            }
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'scale(1.05)';
+            e.currentTarget.style.boxShadow = '0 0 8px rgba(0, 191, 255, 0.5)';
+          }}
+          onMouseLeave={(e) => {
+            if (currentDrawingMode !== 'looseWire') {
+              e.currentTarget.style.transform = 'scale(1)';
+              e.currentTarget.style.boxShadow = 'none';
+            }
           }}
         >
-          ✏️ Alambre suelto
+          {/* Círculo exterior azul */}
+          <div style={{
+            width: '30px',
+            height: '30px',
+            borderRadius: '50%',
+            backgroundColor: 'blue',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginRight: '10px',
+            flexShrink: 0, // Evita que se encoja
+          }}>
+            {/* Círculo interior amarillo */}
+            <div style={{
+              width: '15px',
+              height: '15px',
+              borderRadius: '50%',
+              backgroundColor: 'yellow',
+            }}></div>
+          </div>
+          <span style={{ 
+            fontWeight: 'bold', 
+            color: '#333', 
+            whiteSpace: 'nowrap', // Evita que el texto se rompa
+            overflow: 'hidden',
+            textOverflow: 'ellipsis'
+          }}>Alambre suelto</span>
         </button>
-        <hr style={{ margin: '15px 0' }} />
-        <p>Otros elementos (Pendientes de definir).</p>
-        <button disabled>Seleccionar Todo</button>
-      </div>
-    );
+
+        <hr style={{ margin: '15px 0' }} />
+        <p>Otros elementos (Pendientes de definir).</p>
+        <button disabled>Seleccionar Todo</button>
+      </div>
+    );
   } else {
     title = 'Menú Desconocido';
     content = <p>Selecciona una opción del panel lateral.</p>;
   }
 
   return (
-    // 💡 CORRECCIÓN 2: Se agrega el React Fragment <> para envolver los dos elementos de nivel superior.
     <> 
         <div className={`menu-panel-container ${panelClass}`}>
           <div className="menu-content">
@@ -189,19 +237,17 @@ content = (
             <div
               style={{
                 position: 'absolute',
-                // Posicionamiento moderno a la derecha del panel
                 top: '50px', 
-                left: '310px', // 50px (Sidebar) + 250px (MenuPanel) + 10px de margen
+                left: '310px', 
                 backgroundColor: 'white',
                 border: '1px solid #ccc',
-                borderRadius: '10px', // Bordes redondos
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)', // Sombreado
+                borderRadius: '10px', 
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)', 
                 zIndex: 1000,
                 padding: '15px',
                 minWidth: '220px',
                 fontFamily: 'Arial, sans-serif'
               }}
-              // Se cierra automáticamente al mover el ratón fuera
               onMouseLeave={() => setIsNewProjectSelectionOpen(false)} 
             >
               <h4 style={{ margin: '0 0 15px 0', borderBottom: '1px solid #eee', paddingBottom: '10px', color: '#333' }}>Seleccione Tipo de Proyecto</h4>
@@ -253,12 +299,8 @@ content = (
               
             </div>
           )}
-    </> // Cierre del React Fragment
+    </>
   );
 }
 
 export default MenuPanel;
-
-
-
-
