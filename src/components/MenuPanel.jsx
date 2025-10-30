@@ -1,5 +1,80 @@
 import React, { useRef, useState } from 'react';
 
+// Componente helper para los botones de ruteo (Dona/Círculo)
+const RoutingButton = ({ name, outerColor, innerColor, mode, currentDrawingMode, setDrawingMode }) => {
+    const isActive = currentDrawingMode === mode;
+
+    // Estilo base para el botón
+    const buttonStyle = {
+        display: 'flex',
+        alignItems: 'center',
+        padding: '8px 10px',
+        backgroundColor: 'white', 
+        border: 'none',
+        borderRadius: '8px',
+        cursor: 'pointer',
+        // Sombra azul cuando activo para destacarlo
+        boxShadow: isActive ? '0 0 10px rgba(0, 191, 255, 0.7)' : 'none', 
+        transform: isActive ? 'scale(1.02)' : 'scale(1)', 
+        transition: 'all 0.2s ease-in-out',
+        outline: 'none',
+        width: '100%',
+        marginBottom: '10px',
+    };
+
+    // Lógica para el hover y el sombreado visual
+    const handleMouseEnter = (e) => {
+        e.currentTarget.style.transform = 'scale(1.05)';
+        e.currentTarget.style.boxShadow = '0 0 8px rgba(0, 191, 255, 0.5)';
+    };
+
+    const handleMouseLeave = (e) => {
+        if (!isActive) {
+            e.currentTarget.style.transform = 'scale(1)';
+            e.currentTarget.style.boxShadow = 'none';
+        }
+    };
+
+    return (
+        <button 
+            onClick={() => setDrawingMode(isActive ? 'pan' : mode)}
+            style={buttonStyle}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+        >
+            {/* Círculo exterior (Dona) */}
+            <div style={{
+                width: '30px',
+                height: '30px',
+                borderRadius: '50%',
+                backgroundColor: outerColor,
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                marginRight: '10px',
+                flexShrink: 0,
+            }}>
+                {/* Círculo interior */}
+                <div style={{
+                    // Si innerColor es null/undefined, width y height son 30px, haciendo un círculo sólido
+                    width: innerColor && innerColor !== outerColor ? '15px' : '30px', 
+                    height: innerColor && innerColor !== outerColor ? '15px' : '30px',
+                    borderRadius: '50%',
+                    backgroundColor: innerColor || outerColor, // Usa outerColor si innerColor es null (sólido)
+                }}></div>
+            </div>
+            <span style={{ 
+                fontWeight: 'bold', 
+                color: '#333', 
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
+            }}>{name}</span>
+        </button>
+    );
+};
+
+
 // MenuPanel es el panel que se despliega (la "caja" de herramientas)
 function MenuPanel({ isOpen, activeMenu, onDxfFileSelect, onSelectNewProject, setDrawingMode, currentDrawingMode, projectType }) { 
   const panelClass = isOpen ? 'open' : '';
@@ -28,12 +103,12 @@ function MenuPanel({ isOpen, activeMenu, onDxfFileSelect, onSelectNewProject, se
           onClick={() => setIsNewProjectSelectionOpen(true)} 
           style={{
             padding: '10px 15px',
-            backgroundColor: '#059669', // Verde para "Nuevo"
+            backgroundColor: '#059669', 
             color: 'white',
             border: 'none',
             borderRadius: '4px',
             cursor: 'pointer',
-            width: '100%', // Ancho completo
+            width: '100%', 
             marginBottom: '10px'
           }}
         >
@@ -102,18 +177,7 @@ function MenuPanel({ isOpen, activeMenu, onDxfFileSelect, onSelectNewProject, se
         >
     📏 Línea
 </button>
-          {/* BOTÓN SELECCIÓN */}
-           <button 
-              onClick={() => setDrawingMode(currentDrawingMode === 'select' ? 'pan' : 'select')}
-                  style={{ 
-                      padding: '8px', 
-                      backgroundColor: currentDrawingMode === 'select' ? '#a5f3fc' : 'white', 
-                      border: currentDrawingMode === 'select' ? '2px solid #06b6d4' : '1px solid #ccc' 
-                    }}
-                  >
-              🖱️ Selección
-          </button>
-        
+        
         <hr style={{ margin: '15px 0' }} />
 
         {/* Otros botones... */}
@@ -149,71 +213,30 @@ content = (
     title = 'Elementos';
     content = (
       <div>
-        <h4>Herramientas de Elementos</h4>
-        {/* 🔑 BOTÓN "ALAMBRE SUELTO" - Diseño de dona */}
-        <button 
-          onClick={() => setDrawingMode(currentDrawingMode === 'looseWire' ? 'pan' : 'looseWire')}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            padding: '8px 10px',
-            backgroundColor: 'white', 
-            border: 'none',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            boxShadow: currentDrawingMode === 'looseWire' ? '0 0 10px rgba(0, 191, 255, 0.7)' : 'none', // Sombra azul cuando activo
-            transform: currentDrawingMode === 'looseWire' ? 'scale(1.02)' : 'scale(1)', // Pequeño escalado al estar activo
-            transition: 'all 0.2s ease-in-out', // Transición suave
-            outline: 'none',
-            width: '100%',
-            marginBottom: '10px',
-            // Añadir hover para realce
-            ':hover': {
-              transform: 'scale(1.05)',
-              boxShadow: '0 0 8px rgba(0, 191, 255, 0.5)',
-            }
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'scale(1.05)';
-            e.currentTarget.style.boxShadow = '0 0 8px rgba(0, 191, 255, 0.5)';
-          }}
-          onMouseLeave={(e) => {
-            if (currentDrawingMode !== 'looseWire') {
-              e.currentTarget.style.transform = 'scale(1)';
-              e.currentTarget.style.boxShadow = 'none';
-            }
-          }}
-        >
-          {/* Círculo exterior azul */}
-          <div style={{
-            width: '30px',
-            height: '30px',
-            borderRadius: '50%',
-            backgroundColor: 'blue',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            marginRight: '10px',
-            flexShrink: 0, // Evita que se encoja
-          }}>
-            {/* Círculo interior amarillo */}
-            <div style={{
-              width: '15px',
-              height: '15px',
-              borderRadius: '50%',
-              backgroundColor: 'yellow',
-            }}></div>
-          </div>
-          <span style={{ 
-            fontWeight: 'bold', 
-            color: '#333', 
-            whiteSpace: 'nowrap', // Evita que el texto se rompa
-            overflow: 'hidden',
-            textOverflow: 'ellipsis'
-          }}>Alambre suelto</span>
-        </button>
+        {/* 🔑 NUEVA SECCIÓN: RUTEO */}
+        <h4>Ruteos</h4>
+        
+        {/* Botón Alambre Suelto (Azul/Amarillo) */}
+        <RoutingButton
+            name="Alambre suelto"
+            outerColor="blue"
+            innerColor="yellow"
+            mode="looseWire"
+            currentDrawingMode={currentDrawingMode}
+            setDrawingMode={setDrawingMode}
+        />
 
-        <hr style={{ margin: '15px 0' }} />
+        {/* 🔑 NUEVO BOTÓN: Ruteo Sólido (Verde Sólido) */}
+        <RoutingButton
+            name="Ruteo Sólido" 
+            outerColor="green" // Círculo exterior verde
+            innerColor="green" // Círculo interior verde para un efecto sólido
+            mode="solidRouting" // Nuevo modo de dibujo
+            currentDrawingMode={currentDrawingMode}
+            setDrawingMode={setDrawingMode}
+        />
+        
+        <hr style={{ margin: '15px 0' }} />
         <p>Otros elementos (Pendientes de definir).</p>
         <button disabled>Seleccionar Todo</button>
       </div>
