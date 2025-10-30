@@ -128,32 +128,45 @@ useEffect(() => {
       </p>
     );
   } else {
-    // Caso: Canvas Listo
-    canvasContent = (
-      <>
-        {/* Muestra cuántas entidades se encontraron (si hay) */}
-        {dxfEntities.length > 0 && (
-            <p style={{ position: 'absolute', top: 10, left: 10, color: '#333', zIndex: 1, backgroundColor: 'white', padding: '5px' }}>
-                Entidades: {dxfEntities.length}
-            </p>
-        )}
-        
-        {/* 🔑 DxfCanvas solo se renderiza si hay un projectType válido */}
-        {projectType && ( 
-          <DxfCanvas 
-            entities={dxfEntities} 
-            setEntities={setDxfEntities} 
-            blocks={blockDefinitions}
-            drawingMode={drawingMode}
-            setDrawingMode={setDrawingMode}
-         isOrthoActive={isOrthoActive}
-         isSnapActive={isSnapActive}
-         lineColor={lineColor}
-         lineThicknessMm={lineThicknessMm}
-          /> 
-        )}
-      </>
-    );
+    // Caso: Canvas Listo (isCanvasInitialized es true)
+
+    // 🔑 FIX: Estructura de renderizado explícita por tipo de proyecto
+    if (projectType === 'dibujo') {
+        canvasContent = (
+            <>
+                {/* Muestra cuántas entidades se encontraron (si hay) */}
+                {dxfEntities.length > 0 && (
+                    <p style={{ position: 'absolute', top: 10, left: 10, color: '#333', zIndex: 1, backgroundColor: 'white', padding: '5px' }}>
+                        Entidades: {dxfEntities.length}
+                    </p>
+                )}
+                
+                {/* Renderiza DxfCanvas para proyectos de 'dibujo' */}
+                <DxfCanvas 
+                    entities={dxfEntities} 
+                    setEntities={setDxfEntities} 
+                    blocks={blockDefinitions}
+                    drawingMode={drawingMode}
+                    setDrawingMode={setDrawingMode}
+                    isOrthoActive={isOrthoActive}
+                    isSnapActive={isSnapActive}
+                    lineColor={lineColor}
+                    lineThicknessMm={lineThicknessMm}
+                /> 
+            </>
+        );
+    } else if (projectType === 'enmallado') {
+        // Renderiza contenido de Enmallado (Placeholder)
+         canvasContent = (
+             <div style={{ padding: '50px', textAlign: 'center' }}>
+                 <h2>Modo Enmallado Activo</h2>
+                 <p>Aquí se renderizaría la herramienta de enmallado.</p>
+             </div>
+        );
+    } else {
+        // Fallback si projectType es null pero isCanvasInitialized es true (no debería pasar)
+        canvasContent = <p>Proyecto iniciado. Seleccione una herramienta.</p>;
+    }
   }
 
 
@@ -172,10 +185,10 @@ useEffect(() => {
         isOpen={isMenuOpen} 
         activeMenu={activeMenu} 
         onDxfFileSelect={handleDxfFileSelect}
-        onSelectNewProject={startNewProject} // 🔑 NUEVO NOMBRE DE PROP
+        onSelectNewProject={startNewProject} // 🔑 NOMBRE DE PROP CORREGIDO
         setDrawingMode={setDrawingMode}
         currentDrawingMode={drawingMode}
-        projectType={projectType} // 🔑 NUEVA PROP
+        projectType={projectType} // 🔑 PROP para estado
       />
       
       {/* 🔑 NUEVO CONTENEDOR PRINCIPAL: Apila Canvas (se expande) y Barra de Estado (fija) */}
