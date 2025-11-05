@@ -62,16 +62,15 @@ function DxfCanvas({ entities, setEntities, blocks, drawingMode, setDrawingMode,
     };
 }, []); 
 
-  // 🔑 EFECTO: Resetea el estado de dibujo cuando el modo cambia
+  // 🔑 NUEVO EFECTO: Resetea el estado de dibujo cuando el modo cambia
 useEffect(() => {
-    // MODIFICADO: Incluye 'solidRouting' en la excepción para limpieza
-    if (drawingMode !== 'line' && drawingMode !== 'looseWire' && drawingMode !== 'solidRouting') { 
+    if (drawingMode !== 'line' && drawingMode !== 'looseWire') {
         setLineStartPoint(null); 
         setCurrentEndPoint(null);
-        setTypedLength(''); 
-        setIsTypingLength(false); 
+        setTypedLength(''); // Limpia cualquier dimensión tecleada
+        setIsTypingLength(false); // Sale del modo de entrada numérica
     }
-    if (drawingMode !== 'select') {
+if (drawingMode !== 'select') {
         setSelectedEntityIndex(null);
         setHoveredEntityIndex(null);
     }
@@ -90,8 +89,7 @@ useEffect(() => {
     entities.forEach(entity => {
 
       // Cálculo del Bounding Box
-      // MODIFICADO: Incluye SOLID_ROUTING en el cálculo del Bounding Box
-      if ((entity.type === 'LINE' || entity.type === 'LOOSE_WIRE' || entity.type === 'SOLID_ROUTING') && entity.start && entity.end) {
+      if (entity.type === 'LINE' && entity.start && entity.end) {
         if (isValidCoord(entity.start.x) && isValidCoord(entity.end.x)) {
           minX = Math.min(minX, entity.start.x, entity.end.x);
           maxX = Math.max(maxX, entity.start.x, entity.end.x);
@@ -168,15 +166,15 @@ useEffect(() => {
       const scaleY = (CANVAS_HEIGHT - padding) / drawingHeight;
       newScale = Math.min(scaleX, scaleY);
       
-      // Cálculo de centro y offset
+      // ... (cálculo de centerX/centerY y offsetX/offsetY) ...
       const centerX = minX + drawingWidth / 2;
       const centerY = minY + drawingHeight / 2;
 
       offsetX = (CANVAS_WIDTH / 2) - (centerX * newScale);
       offsetY = (CANVAS_HEIGHT / 2) - (centerY * (-newScale));
     } else {
-      newScale = 0.0000001; // Forzamos una escala mínima 
-      offsetX = CANVAS_WIDTH / 2; 
+      newScale = 0.0000001; // Forzamos una escala mínima (para que intente dibujar, aunque muy pequeño)
+      offsetX = CANVAS_WIDTH / 2; // Lo centramos en el medio del lienzo.
       offsetY = CANVAS_HEIGHT / 2;
       console.warn("ADVERTENCIA CRÍTICA: Límites del DXF inválidos o demasiado grandes. Forzando una escala mínima y centrado. Use el zoom para encontrar el dibujo.");
     }
@@ -187,6 +185,7 @@ useEffect(() => {
     console.log(`OffsetY calculado: ${offsetY}`);
     console.log(`Posición Y FINAL aplicada: ${offsetY + CANVAS_HEIGHT}`);
     
+    // ... (resto del useEffect: setScale, setOffset, setDebugInfo)
     setScale(newScale);
     setOffset({ x: offsetX, y: offsetY });
     setDebugInfo(`Scale: ${newScale.toFixed(8)}, Offset: (${offsetX.toFixed(0)}, ${offsetY.toFixed(0)})`);
@@ -234,8 +233,8 @@ if (e.target === stage) {
     // Ignorar clics mientras el usuario está tecleando la longitud
     if (isTypingLength) return; 
     
-    // 🔑 LÓGICA DE DIBUJO DE LÍNEA, ALAMBRE SUELTO, y RUTEO SÓLIDO
-    if (drawingMode === 'line' || drawingMode === 'looseWire' || drawingMode === 'solidRouting') { // <-- MODIFICADO: Incluye solidRouting
+    // 🔑 LÓGICA DE DIBUJO DE LÍNEA
+    if (drawingMode === 'line' || drawingMode === 'looseWire') {
       const clickedPoint = getRelativePoint(stage);
       if (!clickedPoint) return;
 
@@ -250,19 +249,11 @@ if (e.target === stage) {
         
       } else {
         const finalPoint = currentEndPoint || clickedPoint; 
-        
-        // CORREGIDO: Determinar el tipo de entidad
-        let entityType;
-        if (drawingMode === 'looseWire') {
-            entityType = 'LOOSE_WIRE';
-        } else if (drawingMode === 'solidRouting') { // <-- NUEVO TIPO
-            entityType = 'SOLID_ROUTING';
-        } else {
-            entityType = 'LINE';
-        }
+
+        const entityType = drawingMode === 'looseWire' ? 'LOOSE_WIRE' : 'LINE';
         
         const newLine = {
-          type: entityType, // <-- MODIFICADO
+          type: entityType,
           start: lineStartPoint,
           end: finalPoint,
           color: lineColor,
@@ -284,7 +275,7 @@ if (e.target === stage) {
       setIsDragging(true);
       setLastPos({ x: e.evt.clientX, y: e.evt.clientY });
     }
-}, [drawingMode, lineStartPoint, currentEndPoint, getRelativePoint, setEntities, isTypingLength, isSnapActive, getSnappedPoint, lineColor, lineThicknessMm]);
+}, [drawingMode, lineStartPoint, currentEndPoint, getRelativePoint, setEntities, isTypingLength]);
   
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
@@ -299,12 +290,12 @@ const getSnappedPoint = useCallback((currentPoint) => {
     let minDistance = Infinity;
 
     // 1. Convertir la distancia de píxeles a unidades del mundo
+    // (SNAP_DISTANCE / scale) nos da la distancia en unidades de dibujo
     const snapThresholdWorld = SNAP_DISTANCE / scale; 
 
-    // 2. Iterar sobre los puntos clave de las entidades existentes (incluye el nuevo tipo)
+    // 2. Iterar sobre los puntos clave de las entidades existentes (solo líneas por ahora)
     entities.forEach(entity => {
-        // MODIFICADO: Incluye SOLID_ROUTING en el snap
-        if (entity.type === 'LINE' || entity.type === 'LOOSE_WIRE' || entity.type === 'SOLID_ROUTING') { 
+        if (entity.type === 'LINE') {
             const snapPoints = [entity.start, entity.end];
             
             snapPoints.forEach(p => {
@@ -336,6 +327,8 @@ const handleContextMenu = (e) => {
     const clickedOnShape = e.target !== stage && e.target.getStage() === stage;
 
     if (clickedOnShape) {
+        // Si hacemos clic en una entidad, el menú no aparece, y podrías implementar la selección.
+        // Por ahora, solo ocultamos el menú si estuviera visible.
         setContextMenu(null);
     } else {
         // 3. Mostrar el menú en las coordenadas del ratón (en píxeles de pantalla)
@@ -356,6 +349,7 @@ const handleMouseMove = useCallback((e) => {
     
     // Lógica de Pan
     if (drawingMode === 'pan' && isDragging) {
+      // ... (código existente para Pan) ...
       const dx = e.evt.clientX - lastPos.x;
       const dy = e.evt.clientY - lastPos.y;
 
@@ -368,8 +362,8 @@ const handleMouseMove = useCallback((e) => {
       return; // Salir
     }
     
-    // 🔑 LÓGICA DE VISTA PREVIA DE LÍNEA / ALAMBRE SUELTO / RUTEO SÓLIDO
-    if ((drawingMode === 'line' || drawingMode === 'looseWire' || drawingMode === 'solidRouting') && lineStartPoint && !isTypingLength) { // <-- MODIFICADO: Incluye solidRouting
+    // 🔑 LÓGICA DE VISTA PREVIA DE LÍNEA
+    if ((drawingMode === 'line' || drawingMode === 'looseWire') && lineStartPoint && !isTypingLength) {
         let point = getRelativePoint(stage);
         if (!point) return;
 
@@ -396,11 +390,11 @@ const handleMouseMove = useCallback((e) => {
   useEffect(() => {
     // 🔑 Manejador de entrada de teclado para la longitud
     const handleKeyDown = (e) => {
-      // MODIFICADO: Incluye solidRouting en la condición
-      if ((drawingMode !== 'line' && drawingMode !== 'looseWire' && drawingMode !== 'solidRouting') || !lineStartPoint) return; 
+      // Solo interesa si estamos en modo 'line' Y ya tenemos un punto de inicio
+      if ((drawingMode !== 'line' && drawingMode !== 'looseWire') || !lineStartPoint) return;
 
       if (['0','1','2','3','4','5','6','7','8','9'].includes(e.key)) {
-          e.preventDefault(); 
+          e.preventDefault(); // CRÍTICO: Evita que la tecla afecte a cualquier otro elemento
           const newDigit = e.key;
           
           if (!isTypingLength) {
@@ -409,7 +403,7 @@ const handleMouseMove = useCallback((e) => {
           } else {
               setTypedLength(prevLength => prevLength + newDigit);
           }
-          return; 
+          return; // Finaliza aquí si es un dígito
       }
 
       // Si el usuario presiona Enter para confirmar la longitud
@@ -445,17 +439,7 @@ const handleMouseMove = useCallback((e) => {
             setIsTypingLength(false);
             return;
         }
-        
-        // 🔑 Determinar el tipo de entidad para el nuevo elemento creado
-        let entityType;
-        if (drawingMode === 'looseWire') {
-            entityType = 'LOOSE_WIRE';
-        } else if (drawingMode === 'solidRouting') { // <-- NUEVO TIPO
-            entityType = 'SOLID_ROUTING';
-        } else {
-            entityType = 'LINE';
-        }
-
+        const entityType = drawingMode === 'looseWire' ? 'LOOSE_WIRE' : 'LINE';
         const newLine = {
             type: entityType,
             start: lineStartPoint,
@@ -516,8 +500,7 @@ const handleMouseMove = useCallback((e) => {
 
     switch (blockEntity.type) {
         case 'LINE':
-        case 'LOOSE_WIRE':
-        case 'SOLID_ROUTING': // <-- MODIFICADO: Agregado al render interno de bloques
+            case 'LOOSE_WIRE':
             if (!blockEntity.start || !blockEntity.end) return null;
             const linePoints = [blockEntity.start.x, blockEntity.start.y, blockEntity.end.x, blockEntity.end.y];
             return (
@@ -554,13 +537,13 @@ const handleMouseMove = useCallback((e) => {
         default:
             return null;
     }
-  };
+};
  
   const renderEntity = (entity, index) => {
     if (!entity || !entity.type) return null;
     
-    // Asignar strokeWidth por defecto. La entidad LINE/LOOSE_WIRE/SOLID_ROUTING lo sobreescribirá.
-    const strokeWidth = 1 / scale; 
+    const strokeColor = entity.color || 'black';
+    // const strokeWidth = 1 / scale;
 
     switch (entity.type) {
             case 'MTEXT':
@@ -587,14 +570,14 @@ const handleMouseMove = useCallback((e) => {
                     fill={entity.color} 
                 />
             );
-            
+        
       case 'LINE':
         if (!entity.start || !entity.end) return null;
         const linePoints = [
-            entity.start.x || 0,  
-            entity.start.y || 0,  
-            entity.end.x || 0,    
-            entity.end.y || 0     
+            entity.start.x || 0,  // ⬅️ CAMBIO CRÍTICO
+            entity.start.y || 0,  // ⬅️ CAMBIO CRÍTICO
+            entity.end.x || 0,    // ⬅️ CAMBIO CRÍTICO
+            entity.end.y || 0     // ⬅️ CAMBIO CRÍTICO
         ];
         
         const allLineCoordsValid = linePoints.every(isSafeNumber);
@@ -612,8 +595,9 @@ const handleMouseMove = useCallback((e) => {
         
         // Propiedades visuales
         const currentStroke = isHovered ? 'blue' : strokeColor;
+        // Si está en hover, lo hacemos más grueso, si está seleccionado, mantenemos el grosor base para que el punteado se vea bien.
         const currentStrokeWidth = isHovered ? (baseStrokeWidth * 1.5) : baseStrokeWidth;
-        const currentDash = isSelected ? [5 / scale, 5 / scale] : []; 
+        const currentDash = isSelected ? [5 / scale, 5 / scale] : []; // Línea punteada si está seleccionada
         
         const lineComponent = (
           <Line
@@ -679,9 +663,7 @@ const handleMouseMove = useCallback((e) => {
         }
         
         return lineComponent; 
-        
 case 'LOOSE_WIRE':
-        // No se aplica hover/selection a los elementos todavía, solo se renderiza la doble línea
         if (!entity.start || !entity.end || !isSafeNumber(entity.thickness)) return null;
 
         const linePointsWire = [
@@ -711,27 +693,6 @@ case 'LOOSE_WIRE':
                 />
             </Group>
         );
-        
-case 'SOLID_ROUTING': // 🔑 NUEVA LÓGICA DE RENDER PARA RUTEO SÓLIDO (Verde)
-        if (!entity.start || !entity.end || !isSafeNumber(entity.thickness)) return null;
-
-        const solidLinePoints = [
-            entity.start.x, 
-            entity.start.y, 
-            entity.end.x, 
-            entity.end.y
-        ];
-        
-        const baseThicknessSolid = entity.thickness;
-
-        return (
-            <Line
-                key={index}
-                points={solidLinePoints}
-                stroke={'green'} // Color fijo verde
-                strokeWidth={baseThicknessSolid / scale} // Grosor completo
-            />
-        );
             
       case 'CIRCLE':
         if (!entity.center || isNaN(entity.center.x) || isNaN(entity.radius)) return null;
@@ -741,11 +702,11 @@ case 'SOLID_ROUTING': // 🔑 NUEVA LÓGICA DE RENDER PARA RUTEO SÓLIDO (Verde)
             x={entity.center.x}
             y={entity.center.y}
             radius={entity.radius}
-            stroke={entity.color || 'black'}
+            stroke={strokeColor}
             strokeWidth={strokeWidth}
           />
         );
-      case 'POLYLINE_GEOM': 
+      case 'POLYLINE_GEOM': // ⬅️ NUEVO CASO para Polilíneas
         if (!entity.points || entity.points.length < 4) return null;
         const validPoints = entity.points.filter(isSafeNumber);
 
@@ -758,7 +719,7 @@ case 'SOLID_ROUTING': // 🔑 NUEVA LÓGICA DE RENDER PARA RUTEO SÓLIDO (Verde)
           <Line
             key={index}
             points={entity.points} // Array plano [x1, y1, x2, y2, ...]
-            stroke={entity.color || 'black'}
+            stroke={strokeColor}
             strokeWidth={strokeWidth}
             closed={entity.isClosed} // Cierra la figura si es una forma (e.g., rectángulo)
           />
@@ -815,7 +776,7 @@ return (
           border: '1px solid #ddd', 
           cursor: isDragging 
               ? 'grabbing' 
-              : (drawingMode === 'line' || drawingMode === 'looseWire' || drawingMode === 'solidRouting' // <-- MODIFICADO: Incluye solidRouting en la lógica del cursor
+              : (drawingMode === 'line' 
                   ? 'crosshair' 
                   : (drawingMode === 'pan' 
                       ? 'grab' 
@@ -831,44 +792,36 @@ return (
             scaleX={scale}
             scaleY={-scale}
         >
-            {/* 🔑 Vista previa de la línea normal */}
+            {/* 🔑 Vista previa de la línea (DENTRO de la capa escalada) */}
             {drawingMode === 'line' && lineStartPoint && currentEndPoint && (
                 <Line
                     points={[lineStartPoint.x, lineStartPoint.y, currentEndPoint.x, currentEndPoint.y]}
                     stroke={lineColor}
-                    strokeWidth={1 / scale} 
+                    strokeWidth={1 / scale} // Se mantiene delgado sin importar el zoom
                     dash={[10 / scale, 5 / scale]} 
                 />
             )}
-            
+            {/* Todas las entidades permanentes */}
+            {entities.map((entity, index) => renderEntity(entity, index))}
+
             {/* 🔑 Vista previa de ALAMBRE SUELTO (LOOSE_WIRE) */}
             {drawingMode === 'looseWire' && lineStartPoint && currentEndPoint && (
                 <Group>
                     {/* Base Line (Blue) */}
                     <Line
                         points={[lineStartPoint.x, lineStartPoint.y, currentEndPoint.x, currentEndPoint.y]}
-                        stroke={'blue'} 
-                        strokeWidth={lineThicknessMm / scale} 
+                        stroke={'blue'} // Color fijo
+                        strokeWidth={lineThicknessMm / scale} // Grosor completo
                         dash={[10 / scale, 5 / scale]} 
                     />
                     {/* Secondary Line (Yellow) - Half thickness */}
                     <Line
                         points={[lineStartPoint.x, lineStartPoint.y, currentEndPoint.x, currentEndPoint.y]}
-                        stroke={'yellow'} 
-                        strokeWidth={(lineThicknessMm / 2) / scale} 
+                        stroke={'yellow'} // Color fijo
+                        strokeWidth={(lineThicknessMm / 2) / scale} // Mitad de grosor
                         dash={[10 / scale, 5 / scale]} 
                     />
                 </Group>
-            )}
-            
-            {/* 🔑 Vista previa de RUTEO SÓLIDO (SOLID_ROUTING) */}
-            {drawingMode === 'solidRouting' && lineStartPoint && currentEndPoint && (
-                <Line
-                    points={[lineStartPoint.x, lineStartPoint.y, currentEndPoint.x, currentEndPoint.y]}
-                    stroke={'green'} // Color fijo
-                    strokeWidth={lineThicknessMm / scale} // Grosor completo
-                    dash={[10 / scale, 5 / scale]} 
-                />
             )}
 
             {/* Todas las entidades permanentes */}
@@ -877,9 +830,10 @@ return (
         
         
         {/* 2. CAPA DE HUD Y DEBUG (SIN ESCALA NI OFFSET - se superpone) */}
+        {/* Usamos un solo Layer para ambos elementos de la UI/HUD */}
         <Layer> 
             {/* HUD: Medida de la línea */}
-            {(drawingMode === 'line' || drawingMode === 'looseWire' || drawingMode === 'solidRouting') && lineStartPoint && currentEndPoint && stageRef.current && ( // <-- MODIFICADO: Incluye solidRouting en el HUD
+            {drawingMode === 'line' && lineStartPoint && currentEndPoint && stageRef.current && (
                 <Text
                     text={(() => {
                         const dx = currentEndPoint.x - lineStartPoint.x;
